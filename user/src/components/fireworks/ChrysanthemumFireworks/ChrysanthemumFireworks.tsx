@@ -16,6 +16,7 @@ interface FireworkProps {
   from?: THREE.Vector3 // 花火の打ち上げの始点
   to?: THREE.Vector3 // 花火の打ち上げの終点
   size?: number; // 花火のサイズ
+  isSoundEnabled?: boolean // 音の有無
   onComplete?: () => void; // 花火が終了したときのコールバック
 }
 
@@ -25,6 +26,7 @@ const ChrysanthemumFireworks =  memo(function ChrysanthemumFireworks({
   from = new THREE.Vector3(0, 0, 0),
   to = new THREE.Vector3(0, 1, 0), // 上方向に打ち上げ
   size = 1, 
+  isSoundEnabled = true,
   onComplete = () => {}
 }: FireworkProps) {
   // const initTime = useRef<number | null>(null) // シーンが配置されてからの時間を保持する変数
@@ -63,6 +65,7 @@ const ChrysanthemumFireworks =  memo(function ChrysanthemumFireworks({
           to={to}
           duration={2} // 打ち上げの時間
           color={color}
+          isSoundEnabled={isSoundEnabled}
           onComplete={() => {
             setIsLaunching(false); // 打ち上げ完了
             setIsExploding(true); // 爆発フェーズに移行

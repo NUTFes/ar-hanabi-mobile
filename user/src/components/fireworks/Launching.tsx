@@ -8,6 +8,7 @@ type Props = {
   to: THREE.Vector3
   duration: number // 打ち上げの持続時間
   color?: THREE.ColorRepresentation
+  isSoundEnabled?: boolean  // 音の有無
   onComplete?: () => void
 }
 
@@ -17,6 +18,7 @@ const Launching = memo(function Launching({
   to,
   duration, 
   color = 'white',
+  isSoundEnabled = true,
   onComplete = () => {}
 }: Props) {
   const maxTrailLength = 50    // トレイルの最大長さ
@@ -33,12 +35,12 @@ const Launching = memo(function Launching({
   const initTime = useRef<number | null>(null)  // シーンが配置されてからの時間を保持する変数
   
   const [isCompleted, setIsCompleted] = useState(false) // 花火の完了状態を管理
-  const audio = useRef(new Audio(Sound)) // 音声の参照を保持
-  
+  const audio = isSoundEnabled ? useRef(new Audio(Sound)) : null // 音声の参照を保持
+
   // マウント時とアンマウント時の処理
   useEffect(() => {
     // 音を再生
-    audio.current.play();
+    audio?.current?.play();
     // ====== マウント時の処理 ======
     // パーティクルのgeometryを初期化
     const geometry = new THREE.BufferGeometry()

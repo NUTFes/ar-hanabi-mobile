@@ -84,6 +84,7 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
       const color = new THREE.Color(getColorCode(entry.color));
       const from = new THREE.Vector3(...convertCoordinates(entry.launchPosition));
       const to = new THREE.Vector3(...convertCoordinates(entry.explodePosition));
+      const isSoundEnabled = entry.hasSound;
 
       console.log(`Creating firework: ${entry.type} at ${entry.timestamp}s`);
       console.log(`  Raw launch: [${entry.launchPosition.join(', ')}] -> Converted: [${from.x}, ${from.y}, ${from.z}]`);
@@ -95,7 +96,8 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
         entry,
         from,
         to,
-        color
+        color,
+        isSoundEnabled
       };
     });
     
@@ -159,6 +161,7 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
       to: toPos,
       color: fw.color,
       size: explosionRadius,
+      isSoundEnabled: fw.isSoundEnabled,
       onComplete: () => onFireworkFinished(fw.id),
     };
   }, [onFireworkFinished]);
@@ -185,12 +188,12 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
           return (
             <PeonyFireworks
               key={fw.id}
-              // {...props}
-              to={fw.to}
-              from={fw.from}
-              color={props.color}
-              onComplete={props.onComplete}
-              size={props.size}
+              {...props}
+              // to={fw.to}
+              // from={fw.from}
+              // color={props.color}
+              // onComplete={props.onComplete}
+              // size={props.size}
               // size={fw.size}
               // onComplete={fw.onComplete}
             />

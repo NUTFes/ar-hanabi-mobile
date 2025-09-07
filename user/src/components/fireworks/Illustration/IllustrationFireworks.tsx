@@ -17,6 +17,7 @@ interface FireworkProps {
   to?: THREE.Vector3 // 花火の打ち上げの終点
   size?: number; // 花火のサイズ
   data: boolean[][] // 花火のイラストデータ(booleanの2次元配列)
+  isSoundEnabled?: boolean // 音の有無
   onComplete?: () => void;  // 花火が終了したときのコールバック
 }
 
@@ -27,6 +28,7 @@ const IllustrationFireworks =  memo(function IllustrationFireworks({
   to = new THREE.Vector3(0, 1, 0), // 上方向に打ち上げ
   size = 1,
   data,
+  isSoundEnabled = true,
   onComplete = () => {}
 }: FireworkProps) {
   // const initTime = useRef<number | null>(null) // シーンが配置されてからの時間を保持する変数
@@ -70,6 +72,7 @@ const IllustrationFireworks =  memo(function IllustrationFireworks({
             setIsExploding(true); // 爆発フェーズに移行
             console.log('Firework launching completed!')
           }}
+          isSoundEnabled={isSoundEnabled}
         />
       )}
       {isExploding && (

@@ -17,6 +17,7 @@ interface FireworkProps {
   to?: THREE.Vector3 // 花火の打ち上げの終点
   size?: number; // 花火のサイズ
   layers?: number; // 花弁の層数
+  isSoundEnabled?: boolean // 音の有無
   onComplete?: () => void; // 花火が終了したときのコールバック
 }
 
@@ -27,6 +28,7 @@ const PeonyFireworks =  memo(function PeonyFireworks({
   to = new THREE.Vector3(0, 1, 0), // 上方向に打ち上げ
   size = 1, 
   layers = 1, // 花弁の層数
+  isSoundEnabled = true,
   onComplete = () => {}
 }: FireworkProps) {
   // const initTime = useRef<number | null>(null) // シーンが配置されてからの時間を保持する変数
@@ -65,6 +67,7 @@ const PeonyFireworks =  memo(function PeonyFireworks({
           to={to}
           duration={2} // 打ち上げの時間
           color={color}
+          isSoundEnabled={isSoundEnabled}
           onComplete={() => {
             setIsLaunching(false); // 打ち上げ完了
             setIsExploding(true); // 爆発フェーズに移行

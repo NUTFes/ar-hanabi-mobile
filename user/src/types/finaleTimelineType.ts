@@ -18,6 +18,7 @@ export interface ActiveFirework {
   from: THREE.Vector3;       // 打ち上げ位置のThree.js座標
   to: THREE.Vector3;         // 開花位置のThree.js座標
   color?: THREE.Color;           // Three.js色オブジェクト
+  isSoundEnabled: boolean  // 音の有無
 }
 
 // タイマー制御の状態型
