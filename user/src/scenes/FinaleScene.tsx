@@ -25,6 +25,7 @@ import {
 import { useFinaleTimer } from '../hooks/useFinaleTimer';
 // CSVファイルをテキストとしてインポート
 import finaleTimelineData from '../assets/finale_timeline.csv?raw';
+import SenrinGikuFireworks from '../components/fireworks/SenrinGiku/SenrinGikuFireworks';
 
 interface FinaleSceneProps {
   illustrationFireworks: IllustrationFireworksType; // イラスト花火のデータ（44ロゴ用）
@@ -71,6 +72,8 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
         return PeonyFireworks;
       case FireworkType.CHRYSANTHEMUM: // '菊'
         return ChrysanthemumFireworks;
+      case FireworkType.SENRIN:       // '千輪'
+        return SenrinGikuFireworks;
       default:
         console.warn(`Unknown firework type: ${type}, using PeonyFireworks as fallback`);
         return PeonyFireworks;
@@ -189,13 +192,6 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
             <PeonyFireworks
               key={fw.id}
               {...props}
-              // to={fw.to}
-              // from={fw.from}
-              // color={props.color}
-              // onComplete={props.onComplete}
-              // size={props.size}
-              // size={fw.size}
-              // onComplete={fw.onComplete}
             />
           );
         }
@@ -208,7 +204,16 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
             />
           );
         }
-        
+
+        if (fw.entry.type === FireworkType.SENRIN) {
+          return (
+            <SenrinGikuFireworks
+              key={fw.id}
+              {...props}
+            />
+          );
+        }
+
         // デフォルトフォールバック（牡丹）
         return (
           // <PeonyFireworks

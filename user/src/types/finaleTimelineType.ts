@@ -34,7 +34,8 @@ export interface FinaleTimerState {
 export const FireworkType = {
   LOGO: '44ロゴ',
   PEONY: '牡丹',
-  CHRYSANTHEMUM: '菊'
+  CHRYSANTHEMUM: '菊',
+  SENRIN: '千輪'
 } as const;
 
 export type FireworkTypeValue = typeof FireworkType[keyof typeof FireworkType];
