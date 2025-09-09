@@ -4,7 +4,8 @@ import {
   useImperativeHandle, 
   useEffect,
   useMemo,
-  useCallback
+  useCallback,
+  useRef
 } from 'react'
 import * as THREE from 'three';
 import IllustrationFireworks from '../components/fireworks/Illustration/IllustrationFireworks';
@@ -118,6 +119,49 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
     onFireworkLaunch: handleFireworkLaunch,
     totalDuration
   });
+  
+  // BGM用のAudio要素のref
+  const bgmRef = useRef<HTMLAudioElement | null>(null);
+  
+  // BGMの初期化
+  useEffect(() => {
+    bgmRef.current = new Audio('/audio/finale_bgm.mp3');
+    bgmRef.current.loop = true; // ループ再生
+    bgmRef.current.volume = 0.5; // 音量調整（0.0-1.0）
+    
+    // コンポーネントのアンマウント時にクリーンアップ
+    return () => {
+      if (bgmRef.current) {
+        bgmRef.current.pause();
+        bgmRef.current.currentTime = 0;
+        bgmRef.current = null;
+      }
+    };
+  }, []);
+  
+  // 再生状態の監視とBGM制御
+  useEffect(() => {
+    if (!bgmRef.current) return;
+    
+    if (timerState.isPlaying) {
+      // フィナーレ開始時にBGM再生
+      bgmRef.current.play().catch(error => {
+        console.error('BGM playback failed:', error);
+        console.log('User interaction may be required for audio playback');
+      });
+    } else {
+      // 一時停止時にBGM停止
+      bgmRef.current.pause();
+    }
+  }, [timerState.isPlaying]);
+  
+  // リセット時にBGMを最初から再生するように設定
+  useEffect(() => {
+    if (bgmRef.current && timerState.currentTime === 0 && !timerState.isPlaying) {
+      bgmRef.current.currentTime = 0; // BGMを最初に戻す
+    }
+  }, [timerState.currentTime, timerState.isPlaying]);
+  
   
   // 花火が終了したときの処理
   const onFireworkFinished = useCallback((id: string) => {
