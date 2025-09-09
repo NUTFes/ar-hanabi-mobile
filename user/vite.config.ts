@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['vite.svg'],
+      includeAssets: ['vite.svg', 'audio/fireworks.mp3', 'audio/finale_bgm.mp3', 'logo.png'],
       manifest: {
         name: 'My App',
         short_name: 'App',
