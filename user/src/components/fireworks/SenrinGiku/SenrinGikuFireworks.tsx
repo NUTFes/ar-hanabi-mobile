@@ -6,13 +6,14 @@ import {
 } from 'react'
 import * as THREE from 'three'
 import Launching from '../Launching.tsx' // 打ち上げ時のトレイルを描画するコンポーネント
-import PeonyExploding from '../PeonyFireworks/Exploding.tsx'
+// import PeonyExploding from '../PeonyFireworks/Exploding.tsx'
+import SenrinGikuExploding from './Exploding.tsx'
 
 interface FireworkProps {
   color?: THREE.ColorRepresentation; // 花火の色
   from?: THREE.Vector3 // 花火の打ち上げの始点
   to?: THREE.Vector3 // 花火の打ち上げの終点
-  size?: number; // 花火のサイズ
+  // size?: number; // 花火の半径
   petalCount?: number; // 花弁の層数
   isSoundEnabled?: boolean // 音の有無
   onComplete?: () => void; // 花火が終了したときのコールバック
@@ -28,8 +29,8 @@ const SenrinGikuFireworks =  memo(function SenrinGikuFireworks({
   color = 'white', 
   from = new THREE.Vector3(0, 0, 0),
   to = new THREE.Vector3(0, 1, 0), // 上方向に打ち上げ
-  size = 0.7,
-  petalCount = 30, // 花弁の層数
+  // size = 0.3,
+  petalCount = 10, // 花弁の層数
   isSoundEnabled = true,
   onComplete = () => {}
 }: FireworkProps) {
@@ -93,9 +94,9 @@ const SenrinGikuFireworks =  memo(function SenrinGikuFireworks({
         // petalsを全て描画
         <>
           {Array.from({ length: petalCount }).map((_, i) => (
-            <PeonyExploding
+            <SenrinGikuExploding
               key={i}
-              size={size}
+              size={0.7}
               color={petals.current[i].color}
               position={new THREE.Vector3(
                 petals.current[i].position.x,
