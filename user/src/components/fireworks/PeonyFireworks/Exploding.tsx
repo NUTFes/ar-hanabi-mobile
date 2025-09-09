@@ -25,7 +25,8 @@ const PeonyExploding =  memo(function PeonyExploding({
   onComplete = () => {}
 }: Props) {
   // 分割数（星の数を決定するためのパラメータ）
-  const segments = 20
+  const segments = 15
+  // const segments = 10
   // 星の総数（分割数の二乗）
   const starParticleCount = segments * segments
   // 星のサイズ

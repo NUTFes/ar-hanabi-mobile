@@ -24,7 +24,8 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
   onComplete = () => {}
 }: Props) {
   // 分割数（星の数を決定するためのパラメータ）
-  const segments = 20
+  const segments = 13
+  // const segments = 10
   // 星の総数（分割数の二乗）
   const starParticleCount = segments * segments
   // 重力の強さ
@@ -32,7 +33,8 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
   // デフォルトの速度
   const defaultVelocity = 0.3
   // トレイルの最大長さ
-  const maxTrailLength = 15000
+  const maxTrailLength = 2000
+  // const maxTrailLength = 1000
   // トレイルのパチパチのパーティクル数
   const trailParticleCount = 1
   
@@ -126,7 +128,7 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
     }
   }, [isCompleted, onComplete])
 
-  let count = 0 // フレーム数のカウンター
+  const frameCount = useRef(0) // フレーム数のカウンター
   
   // フレームごとの更新
   useFrame(({clock}) => {
@@ -165,7 +167,8 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
       starPositions.current[i * 3 + 1] += vy
       starPositions.current[i * 3 + 2] += vz
       
-      if(count % 2 === 0) {
+      if(frameCount.current % 3 === 0) { // 一定フレームごとにトレイルを追加
+      // if(frameCount.current % 8 === 0) { // 一定フレームごとにトレイルを追加
         // 軌跡を追加
         for (let j = 0; j < trailParticleCount; j++) {
           trailPositions.current.copyWithin(0, 3) // 先頭の3つの要素を削除
@@ -184,7 +187,7 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
     trailPosAttr.needsUpdate = true
     
     // フレーム数をカウントアップ
-    count++
+    frameCount.current++
   })
 
   return (
