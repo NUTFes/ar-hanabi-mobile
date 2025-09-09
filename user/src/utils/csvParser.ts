@@ -2,16 +2,25 @@ import type { FinaleTimelineEntry, ColorMapping } from '../types/finaleTimelineT
 
 // 色名から16進色コードへのマッピング
 const colorMap: ColorMapping = {
-  'red': '#d64141',
-  'blue': '#2192de',
-  'green': '#5ed872',
-  'yellow': '#ffff00',
-  'white': '#FFFFFF',
-  'purple': '#aa28e6',
-  'orange': '#e19d1f',
-  'indigo': '#1a58f5',
-  'bluegreen': '#00FFFF',
-  'pink': '#f31f9a',
+  '赤': '#d64141',
+  '青': '#2192de',
+  '緑': '#5ed872',
+  '黄緑': '#a8d600',
+  '黄': '#ffff00',
+  '白': '#FFFFFF',
+  '紫': '#aa28e6',
+  '藍': '#132f76',
+  '青紫': '#3c00ff',
+  '赤紫': '#c7155c',
+  '水色': '#52d4ff',
+  '青緑': '#11f79f',
+  'ピンク': '#f31f9a',
+  'ティール': '#008080',
+  'オレンジ': '#ff8000',
+  'ライム': '#80ff00',
+  'バイオレット': '#8000ff',
+  'シアン': '#00ffff',
+  'マゼンタ': '#ff00ff',
   // 空文字列の場合のデフォルト色
   '': '#FFFFFF'
 };
