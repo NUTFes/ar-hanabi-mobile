@@ -33,6 +33,13 @@ export interface FinaleTimerState {
 // 花火の種類定数
 export const FireworkType = {
   LOGO: '44ロゴ',
+  ILLUST1: '「44th」',
+  ILLUST2: '「技大祭」',
+  ILLUST3: '「ご来場」',
+  ILLUST4: '「ありがとうございました」',
+  ILLUST5: '「来年度も」',
+  ILLUST6: '「是非」',
+  ILLUST7: '「お越しください」',
   PEONY: '牡丹',
   CHRYSANTHEMUM: '菊',
   SENRIN: '千輪'

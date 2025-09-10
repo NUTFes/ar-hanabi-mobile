@@ -14,13 +14,7 @@ import {
 import { initializeAR } from '../lib/ar-setup';
 import * as THREE from 'three';
 import FinaleScene from '../scenes/FinaleScene';
-import type { IllustrationFireworksType } from '../types/illustrationFireworksType';
-import { useDeviceMotionCamera } from './hooks/useDeviceMotionCamera';
 import type { FinaleSceneHandle } from '../scenes/FinaleScene';
-
-interface FinaleCanvasProps {
-  illustrationFireworks: IllustrationFireworksType | null; // イラスト花火のデータ（44ロゴ用）
-}
 
 // コンポーネントの外部から呼び出せる関数を定義
 export type FinaleCanvasHandle = {
@@ -32,11 +26,6 @@ export type FinaleCanvasHandle = {
   getTotalDuration: () => number; // 総時間を取得
   getProgress: () => number;      // 進行状況を取得(0-100%)
   isPlaying: () => boolean;       // 再生中かどうか
-  
-  // カメラ制御
-  resetCameraRotation: () => void;                    // カメラの回転をリセット
-  setCurrentAsInitial: () => void;                    // 現在のカメラの回転を初期値として設定
-  setCameraRotation: (euler: THREE.Euler) => void;   // 特定の回転に設定
 }
 
 // ===== FinaleCanvas =====
@@ -45,12 +34,9 @@ export type FinaleCanvasHandle = {
 // - ライト
 // - レンダラー（マルチレンダーやポストプロセス）
 // - AR初期化
-// - デバイスモーション連携
-const FinaleCanvas = forwardRef<FinaleCanvasHandle, FinaleCanvasProps>(( props, ref) => {
+const FinaleCanvas = forwardRef<FinaleCanvasHandle>(( _, ref) => {
   console.log('FinaleCanvas rendered');
-  const { illustrationFireworks } = props;
   const finaleSceneRef = useRef<FinaleSceneHandle>(null);
-  const canvasSetupRef = useRef<CanvasSetupHandle>(null);
 
   // コンポーネントの外部から呼び出せる関数を定義
   useImperativeHandle(ref, () => ({
@@ -62,11 +48,6 @@ const FinaleCanvas = forwardRef<FinaleCanvasHandle, FinaleCanvasProps>(( props, 
     getTotalDuration: () => finaleSceneRef.current?.getTotalDuration() ?? 0,
     getProgress: () => finaleSceneRef.current?.getProgress() ?? 0,
     isPlaying: () => finaleSceneRef.current?.isPlaying() ?? false,
-    
-    // カメラ制御関数をCanvasSetupに委譲
-    resetCameraRotation: () => canvasSetupRef.current?.resetCameraRotation(),
-    setCurrentAsInitial: () => canvasSetupRef.current?.setCurrentAsInitial(),
-    setCameraRotation: (euler: THREE.Euler) => canvasSetupRef.current?.setCameraRotation(euler),
   }));
 
   return (
@@ -77,15 +58,10 @@ const FinaleCanvas = forwardRef<FinaleCanvasHandle, FinaleCanvasProps>(( props, 
         // camera={{ position: [0, 0, 30], fov: 50 }} // カメラの初期位置と視野角を設定
       >
         <Suspense fallback={null}>
-          <CanvasSetup 
-            ref={canvasSetupRef}
+          <CanvasSetup />
+          <FinaleScene
+            ref={finaleSceneRef} // FinaleSceneへの参照を渡す
           />
-          {illustrationFireworks && (
-            <FinaleScene
-              illustrationFireworks={illustrationFireworks} // イラスト花火のデータを渡す
-              ref={finaleSceneRef} // FinaleSceneへの参照を渡す
-            />
-          )}
         </Suspense>
       </Canvas>
     </div>
@@ -94,15 +70,8 @@ const FinaleCanvas = forwardRef<FinaleCanvasHandle, FinaleCanvasProps>(( props, 
 
 export default FinaleCanvas;
 
-// コンポーネントの外部から呼び出せる関数を定義
-export type CanvasSetupHandle = {
-  resetCameraRotation: () => void;                    // カメラの回転をリセット
-  setCurrentAsInitial: () => void;                    // 現在のカメラの回転を初期値として設定
-  setCameraRotation: (euler: THREE.Euler) => void;   // 特定の回転に設定
-}
-
 // Canvasの初期設定(useThreeはcanvas内でのみ使用可能なため切り分けている)
-const CanvasSetup = forwardRef<CanvasSetupHandle>(( _, ref) => {
+const CanvasSetup = () => {
   // THREE.Scene, THREE.Camera, THREE.WebGLRendererを取得
   const { scene, camera, gl } = useThree();
   
@@ -131,19 +100,6 @@ const CanvasSetup = forwardRef<CanvasSetupHandle>(( _, ref) => {
     camera.position.set(0, 0, 100);
     camera.lookAt(0, 0, 0); // 原点を見るように設定
   }, [camera]);
-  
-  // デバイスの回転を検知してカメラを動かすフックを使用
-  const { resetCameraRotation, setCurrentAsInitial, setCameraRotation } = useDeviceMotionCamera(
-    0.7, // 感度
-    new THREE.Euler(0, 0, 0) // 初期回転（水平方向）
-  );
-
-  // コンポーネントの外部から呼び出せる関数を定義
-  useImperativeHandle(ref, () => ({
-    resetCameraRotation,
-    setCurrentAsInitial,
-    setCameraRotation,
-  }));
   
   // 色空間とトーンマッピングの設定（フィナーレ用に最適化）
   useEffect(() => {
@@ -193,4 +149,4 @@ const CanvasSetup = forwardRef<CanvasSetupHandle>(( _, ref) => {
       </EffectComposer>
     </>
   )
-});
+}

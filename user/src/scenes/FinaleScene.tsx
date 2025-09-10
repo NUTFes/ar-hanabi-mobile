@@ -11,7 +11,6 @@ import * as THREE from 'three';
 import IllustrationFireworks from '../components/fireworks/Illustration/IllustrationFireworks';
 import PeonyFireworks from '../components/fireworks/PeonyFireworks/PeonyFireworks';
 import ChrysanthemumFireworks from '../components/fireworks/ChrysanthemumFireworks/ChrysanthemumFireworks';
-import type { IllustrationFireworksType } from '../types/illustrationFireworksType';
 import type { 
   FinaleTimelineEntry, 
   ActiveFirework
@@ -27,10 +26,17 @@ import { useFinaleTimer } from '../hooks/useFinaleTimer';
 // CSVファイルをテキストとしてインポート
 import finaleTimelineData from '../assets/finale_timeline.csv?raw';
 import SenrinGikuFireworks from '../components/fireworks/SenrinGiku/SenrinGikuFireworks';
+import { 
+  logo,
+  finaleIllust1,
+  finaleIllust2,
+  finaleIllust3,
+  finaleIllust4,
+  finaleIllust5,
+  finaleIllust6,
+  finaleIllust7,
+} from '../components/fireworks/Illustration/StaticPixelData/staticPixelData.ts';
 
-interface FinaleSceneProps {
-  illustrationFireworks: IllustrationFireworksType; // イラスト花火のデータ（44ロゴ用）
-}
 
 // コンポーネントの外部から呼び出せる関数を定義
 export type FinaleSceneHandle = {
@@ -45,8 +51,7 @@ export type FinaleSceneHandle = {
 
 // ===== FinaleSceneコンポーネント =====
 // CSVタイムラインに基づいて自動的に花火を打ち上げるシーン
-const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref) => {
-  const { illustrationFireworks } = props;
+const FinaleScene = forwardRef<FinaleSceneHandle>(( _, ref) => {
   
   // タイムラインデータの解析
   const timeline = useMemo(() => {
@@ -67,13 +72,20 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
   // 花火の種類に応じて適切なコンポーネントを選択
   const getFireworkComponent = useCallback((type: string) => {
     switch(type) {
-      case FireworkType.LOGO:          // '44ロゴ'
+      case FireworkType.LOGO:           // '44ロゴ'
+      case FireworkType.ILLUST1:        // 'イラスト1'
+      case FireworkType.ILLUST2:        // 'イラスト2'
+      case FireworkType.ILLUST3:        // 'イラスト3'
+      case FireworkType.ILLUST4:        // 'イラスト4'
+      case FireworkType.ILLUST5:        // 'イラスト5'
+      case FireworkType.ILLUST6:        // 'イラスト6'
+      case FireworkType.ILLUST7:        // 'イラスト7'
         return IllustrationFireworks;
-      case FireworkType.PEONY:         // '牡丹'
+      case FireworkType.PEONY:          // '牡丹'
         return PeonyFireworks;
-      case FireworkType.CHRYSANTHEMUM: // '菊'
+      case FireworkType.CHRYSANTHEMUM:  // '菊'
         return ChrysanthemumFireworks;
-      case FireworkType.SENRIN:       // '千輪'
+      case FireworkType.SENRIN:         // '千輪'
         return SenrinGikuFireworks;
       default:
         console.warn(`Unknown firework type: ${type}, using PeonyFireworks as fallback`);
@@ -190,7 +202,7 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
   // 花火コンポーネントの共通props
   const getFireworkProps = useCallback((fw: ActiveFirework) => {
     // const explodingHeight = 20; // 花火の打ち上げ高さ
-    const explosionRadius = fw.entry.type === FireworkType.LOGO ? 2 : 1; // ロゴは大きめ
+    // const explosionRadius = fw.entry.type === FireworkType.LOGO ? 3 : 1; // ロゴは大きめ
     
     // ActiveFireworkからfromとtoの座標を直接使用
     const fromPos = fw.from.clone(); // 打ち上げ座標
@@ -207,7 +219,7 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
       from: fromPos,
       to: toPos,
       color: fw.color,
-      size: explosionRadius,
+      // size: explosionRadius,
       isSoundEnabled: fw.isSoundEnabled,
       onComplete: () => onFireworkFinished(fw.id),
     };
@@ -218,14 +230,60 @@ const FinaleScene = forwardRef<FinaleSceneHandle, FinaleSceneProps>(( props, ref
       {activeFireworks.map((fw) => {
         const FireworkComponent = getFireworkComponent(fw.entry.type);
         const props = getFireworkProps(fw);
+        let data;
+        let size;
+        // let starSize;
         
-        // 44ロゴの場合は特別にpixelDataを渡す
-        if (fw.entry.type === FireworkType.LOGO && FireworkComponent === IllustrationFireworks) {
+        // イラスト花火の場合は静的なpixelDataを渡す
+        if (FireworkComponent === IllustrationFireworks) {
+          switch (fw.entry.type) {
+            case FireworkType.LOGO:     // ロゴ
+              data = logo;
+              size = 3;
+              // starSize = 0.6;
+              break;
+            case FireworkType.ILLUST1:  // ご来場ありがとうございましたのイラスト
+              data = finaleIllust1;
+              size = 5;
+              break;
+            case FireworkType.ILLUST2:
+              data = finaleIllust2;
+              size = 5;
+              break;
+            case FireworkType.ILLUST3:
+              data = finaleIllust3;
+              size = 5;
+              break;
+            case FireworkType.ILLUST4:
+              data = finaleIllust4;
+              size = 5;
+              break;
+            case FireworkType.ILLUST5:
+              data = finaleIllust5;
+              size = 5;
+              break;
+            case FireworkType.ILLUST6:
+              data = finaleIllust6;
+              size = 5;
+              break;
+            case FireworkType.ILLUST7:
+              data = finaleIllust7;
+              size = 5;
+              break;
+            default:
+              // デフォルトはロゴを表示
+              console.warn(`No matching illustration for type: ${fw.entry.type}, defaulting to logo`);
+              data = logo;
+              size = 2;
+              break;
+          }
           return (
             <IllustrationFireworks
               key={fw.id}
               {...props}
-              data={illustrationFireworks.pixelData} // イラストデータを渡す
+              data={data} // イラストデータを渡す
+              size={size} // サイズを渡す
+              starSize={0.6} // 星のサイズを渡す
             />
           );
         }
