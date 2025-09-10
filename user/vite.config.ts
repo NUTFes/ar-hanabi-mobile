@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['vite.svg', 'audio/fireworks.mp3', 'audio/finale_bgm.mp3', 'logo.png'],
       manifest: {
-        name: 'My App',
-        short_name: 'App',
+        name: 'NUTFES HANABI',
+        short_name: 'NUTFES HANABI',
         start_url: '.',
         display: 'standalone',
         background_color: '#ffffff',
