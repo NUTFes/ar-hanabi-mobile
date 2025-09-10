@@ -18,6 +18,7 @@ interface FireworkProps {
   size?: number; // 花火のサイズ
   data: boolean[][] // 花火のイラストデータ(booleanの2次元配列)
   isSoundEnabled?: boolean // 音の有無
+  starSize?: number; // 星のサイズ
   onComplete?: () => void;  // 花火が終了したときのコールバック
 }
 
@@ -29,6 +30,7 @@ const IllustrationFireworks =  memo(function IllustrationFireworks({
   size = 1,
   data,
   isSoundEnabled = true,
+  starSize = 0.2,
   onComplete = () => {}
 }: FireworkProps) {
   // const initTime = useRef<number | null>(null) // シーンが配置されてからの時間を保持する変数
@@ -81,6 +83,7 @@ const IllustrationFireworks =  memo(function IllustrationFireworks({
           position={to}
           size={size}
           data={data}
+          starSize={starSize}
           onComplete={() => {
             setIsExploding(false); // 爆発完了
             setIsCompleted(true);  // 花火が完了したとフラグを設定
