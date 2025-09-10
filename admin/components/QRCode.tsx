@@ -70,7 +70,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
         }
     }, [qrImageUrl, size, onDownload, onError]);
 
-    // PDFで最大サイズ印刷用のレイアウトを生成
+    // PDFで最大サイズ印刷用のレイアウトを生成（アクリルキーホルダー用）
     const handleGeneratePDF = useCallback(async () => {
         setIsGeneratingPDF(true);
 
@@ -122,90 +122,52 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                 reader.readAsDataURL(qrBlob);
             });
 
-            // PDFを作成 (A4横向き)
+            // PDFを作成 (A4縦向き)
             const pdf = new jsPDF({
-                orientation: 'landscape',
+                orientation: 'portrait',
                 unit: 'mm',
                 format: 'a4'
             });
 
-            const pageWidth = pdf.internal.pageSize.getWidth(); // 297mm
-            const pageHeight = pdf.internal.pageSize.getHeight(); // 210mm
-            const margin = 10; // 余白
-            const cardWidth = (pageWidth - margin * 3) / 2; // カード幅: 約140mm
-            const cardHeight = pageHeight - margin * 2; // カード高: 約190mm
+            const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
+            // const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
-            // 切り取り線のスタイル設定
+            // アクリルキーホルダーのサイズ（45×32mm）
+            const keychainWidth = 45;
+            const keychainHeight = 32;
+            const margin = 10;
+
+            // QRコード（左上）
+            const qrX = margin;
+            const qrY = margin;
+
+            // 画像（QRコードの右隣）
+            const imageX = margin + keychainWidth + 10;
+            const imageY = margin;
+
+            // 枠線を描画
             pdf.setDrawColor(150, 150, 150);
-            pdf.setLineDashPattern([2, 2], 0);
+            pdf.setLineDashPattern([1, 1], 0);
             pdf.setLineWidth(0.3);
 
-            // 左側カード（QRコード）
-            const leftCardX = margin;
-            const leftCardY = margin;
+            // QRコード用の枠
+            pdf.rect(qrX, qrY, keychainWidth, keychainHeight);
 
-            // QRコード用の切り取り枠
-            pdf.rect(leftCardX, leftCardY, cardWidth, cardHeight);
+            // 画像用の枠
+            pdf.rect(imageX, imageY, keychainWidth, keychainHeight);
 
-            // QRコードを最大サイズで配置
-            const qrMaxSize = Math.min(cardWidth * 0.8, cardHeight * 0.65); // さらに大きく
-            const qrX = leftCardX + (cardWidth - qrMaxSize) / 2;
-            const qrY = leftCardY + cardHeight * 0.25; // 上から25%の位置
-            pdf.addImage(qrDataUrl, 'PNG', qrX, qrY, qrMaxSize, qrMaxSize);
+            // QRコードを配置（少し余白を持たせる）
+            const qrPadding = 2;
+            pdf.addImage(qrDataUrl, 'PNG',
+                qrX + qrPadding,
+                qrY + qrPadding,
+                keychainWidth - (qrPadding * 2),
+                keychainHeight - (qrPadding * 2)
+            );
 
-            // QRコードのタイトル
-            pdf.setLineDashPattern([], 0);
-            pdf.setDrawColor(0, 0, 0);
-            pdf.setFontSize(14);
-            pdf.text('Firework QR Code', leftCardX + cardWidth/2, leftCardY + 20, { align: 'center' });
-            pdf.setFontSize(10);
-            pdf.text(`ID: ${fireworkId}`, leftCardX + cardWidth/2, leftCardY + 30, { align: 'center' });
-
-            // QRコード下部の説明
-            pdf.setFontSize(9);
-            const qrBottomY = qrY + qrMaxSize + 10;
-            pdf.text('Scan to view firework', leftCardX + cardWidth/2, qrBottomY, { align: 'center' });
-
-            // 右側カード（オリジナル画像）- 文字なし
-            const rightCardX = margin * 2 + cardWidth;
-            const rightCardY = margin;
-
-            // 画像用の切り取り枠
-            pdf.setDrawColor(150, 150, 150);
-            pdf.setLineDashPattern([2, 2], 0);
-            pdf.setLineWidth(0.3);
-            pdf.rect(rightCardX, rightCardY, cardWidth, cardHeight);
-
+            // 画像を配置
             if (originalImageDataUrl) {
                 try {
-                    // 画像のアスペクト比を計算して最適なサイズで配置
-                    const img = document.createElement('img') as HTMLImageElement;
-                    await new Promise<void>((resolve, reject) => {
-                        img.onload = () => resolve();
-                        img.onerror = () => reject('Failed to load image');
-                        img.src = originalImageDataUrl;
-                    });
-
-                    // 90度回転後の縦横比でサイズを計算
-                    const rotatedAspectRatio = img.height / img.width;
-                    const maxWidth = cardWidth * 0.95;
-                    const maxHeight = cardHeight * 0.95;
-
-                    let imgWidth, imgHeight;
-                    // 回転後の縦横比に基づいて、枠の最大サイズに収まるように計算
-                    if (rotatedAspectRatio > 1) {
-                        // 縦長画像
-                        imgHeight = Math.min(maxHeight, maxWidth * rotatedAspectRatio);
-                        imgWidth = imgHeight / rotatedAspectRatio;
-                    } else {
-                        // 横長画像または正方形
-                        imgWidth = Math.min(maxWidth, maxHeight / rotatedAspectRatio);
-                        imgHeight = imgWidth * rotatedAspectRatio;
-                    }
-
-                    const imgX = rightCardX + (cardWidth - imgWidth) / 2;
-                    const imgY = rightCardY + (cardHeight - imgHeight) / 2;
-
                     // 画像の形式を自動検出
                     const imageFormat = originalImageDataUrl.includes('data:image/png') ? 'PNG' :
                         originalImageDataUrl.includes('data:image/jpeg') ? 'JPEG' :
@@ -213,44 +175,63 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                                 originalImageDataUrl.includes('data:image/gif') ? 'GIF' :
                                     originalImageDataUrl.includes('data:image/webp') ? 'WEBP' : 'JPEG';
 
-                    // jsPDFで画像を回転させて追加
-                    pdf.addImage(originalImageDataUrl, imageFormat, imgX, imgY, imgWidth, imgHeight, undefined, undefined, 90);
+                    pdf.addImage(originalImageDataUrl, imageFormat,
+                        imageX,
+                        imageY,
+                        keychainWidth,
+                        keychainHeight
+                    );
 
                 } catch (imgError) {
                     console.warn('Failed to add image to PDF:', imgError);
                     // 画像が追加できない場合はプレースホルダーを描画
-                    const maxWidth = cardWidth * 0.9;
-                    const maxHeight = cardHeight * 0.9;
-                    const imgX = rightCardX + (cardWidth - maxWidth) / 2;
-                    const imgY = rightCardY + (cardHeight - maxHeight) / 2;
-
                     pdf.setDrawColor(200, 200, 200);
-                    pdf.rect(imgX, imgY, maxWidth, maxHeight);
-                    pdf.setFontSize(12);
+                    pdf.rect(imageX + 5, imageY + 5, keychainWidth - 10, keychainHeight - 10);
+                    pdf.setFontSize(8);
                     pdf.setDrawColor(0, 0, 0);
-                    pdf.text('Original Image', imgX + maxWidth/2, imgY + maxHeight/2, { align: 'center' });
+                    pdf.text('Firework Design', imageX + keychainWidth/2, imageY + keychainHeight/2, { align: 'center' });
                 }
             } else {
                 // プレースホルダー
-                const maxWidth = cardWidth * 0.95;
-                const maxHeight = cardHeight * 0.95;
-                const imgX = rightCardX + (cardWidth - maxWidth) / 2;
-                const imgY = rightCardY + (cardHeight - maxHeight) / 2;
-
                 pdf.setDrawColor(200, 200, 200);
-                pdf.rect(imgX, imgY, maxWidth, maxHeight);
-                pdf.setFontSize(12);
+                pdf.rect(imageX + 5, imageY + 5, keychainWidth - 10, keychainHeight - 10);
+                pdf.setFontSize(8);
                 pdf.setDrawColor(0, 0, 0);
-                pdf.text('Firework Design', imgX + maxWidth/2, imgY + maxHeight/2, { align: 'center' });
+                pdf.text('Firework Design', imageX + keychainWidth/2, imageY + keychainHeight/2, { align: 'center' });
             }
 
-            // 切り取り線の説明
+            // ラベルを追加
+            pdf.setLineDashPattern([], 0);
+            pdf.setDrawColor(0, 0, 0);
             pdf.setFontSize(8);
+            pdf.text('QR Code (裏面)', qrX, qrY + keychainHeight + 5);
+            pdf.text('Design (表面)', imageX, imageY + keychainHeight + 5);
+
+            // 情報セクション
+            const infoY = qrY + keychainHeight + 20;
+            pdf.setFontSize(10);
+            pdf.text('🔑 Acrylic Keychain Information', margin, infoY);
+
+            pdf.setFontSize(8);
+            pdf.text(`Firework ID: ${fireworkId}`, margin, infoY + 8);
+            pdf.text('Insert Size: 45mm × 32mm (each)', margin, infoY + 14);
+            pdf.text('Usage: Place QR code on back, design on front', margin, infoY + 20);
+            pdf.text('Print Size: A4 (210mm × 297mm)', margin, infoY + 26);
+
+            pdf.setFontSize(7);
+            pdf.text('QR Code URL:', margin, infoY + 38);
+
+            // URLを複数行に分割
+            const urlLines = pdf.splitTextToSize(url, pageWidth - (margin * 2));
+            pdf.text(urlLines, margin, infoY + 44);
+
+            // 切り取りガイド
+            pdf.setFontSize(7);
             pdf.setTextColor(100, 100, 100);
-            pdf.text('Cut along dotted lines', pageWidth/2, pageHeight - 3, { align: 'center' });
+            pdf.text('Cut along the border lines for acrylic keychain inserts', margin, qrY + keychainHeight + 12);
 
             // PDFをダウンロード
-            pdf.save(`firework-cards-${fireworkId}.pdf`);
+            pdf.save(`acrylic-keychain-${fireworkId}.pdf`);
 
         } catch (error) {
             console.error('PDF generation error:', error);
@@ -260,9 +241,9 @@ const QRCodeComponent: FC<QRCodeProps> = ({
         } finally {
             setIsGeneratingPDF(false);
         }
-    }, [qrImageUrl, fireworkId, originalImageFile, onError]);
+    }, [qrImageUrl, fireworkId, originalImageFile, onError, url]);
 
-    // 印刷用のHTMLページを生成（最大サイズ＋切り取り線）
+    // 印刷用のHTMLページを生成（アクリルキーホルダー用：45×32mm）
     const handleGeneratePrintPage = useCallback(async () => {
         setIsGeneratingPrint(true);
 
@@ -288,143 +269,67 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                 }
             }
 
-            // 印刷用のHTMLを生成（最大サイズレイアウト）
+            // 印刷用のHTMLを生成（アクリルキーホルダー用レイアウト）
             const printHTML = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firework Cards - ID ${fireworkId}</title>
+    <title>Print</title>
     <style>
         @page {
-            size: A4 landscape;
-            margin: 10mm;
+            size: A4 portrait;
+            margin: 0;
         }
         
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: white;
+            width: 210mm;
+            height: 297mm;
+            position: relative;
         }
         
-        .cards-container {
+        .keychain-item {
+            width: 45mm;
+            height: 32mm;
+            position: absolute;
             display: flex;
-            gap: 10mm;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed black; /* ここで黒の破線を追加 */
+        }
+        
+        .qr-item {
+            top: 10mm;
+            left: 10mm;
+        }
+        
+        .image-item {
+            top: 10mm;
+            left: 65mm;
+        }
+        
+        .image-keychain {
             width: 100%;
             height: 100%;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .card {
-            width: 140mm;
-            height: 190mm;
-            border: 2px dashed #999;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: white;
-        }
-        
-        .card::before {
-            content: "✂";
-            position: absolute;
-            top: -8px;
-            left: -8px;
-            font-size: 12px;
-            color: #999;
-            background: white;
-            padding: 2px;
-        }
-        
-        .card-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 15mm 0 5mm 0;
-            text-align: center;
-        }
-        
-        .card-subtitle {
-            font-size: 12px;
-            margin-bottom: 20mm;
-            color: #666;
-            text-align: center;
-        }
-        
-        .qr-code-large {
-            width: 120mm;
-            height: 120mm;
-            max-width: 120mm;
-            max-height: 120mm;
             object-fit: contain;
-            border: 1px solid #ddd;
-        }
-
-        .image-container {
-            width: 140mm;
-            height: 190mm;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        
-        .original-image-large {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            box-sizing: border-box;
             transform: rotate(90deg);
+            transform-origin: center;
         }
         
-        .placeholder-large {
-            width: 125mm;
-            height: 140mm;
-            border: 2px dashed #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f9f9f9;
-            color: #999;
-            font-size: 18px;
-            text-align: center;
+        .qr-code-keychain {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 2mm;
+            box-sizing: border-box;
         }
         
-        .card-description {
-            margin-top: 10mm;
-            font-size: 11px;
-            color: #666;
-            text-align: center;
-            line-height: 1.4;
-            max-width: 120mm;
-        }
-        
-        .url-text {
-            font-size: 9px;
-            margin-top: 5mm;
-            color: #999;
-            word-break: break-all;
-            font-family: monospace;
-            text-align: center;
-            max-width: 120mm;
-        }
-        
-        .cut-instructions {
-            position: absolute;
-            bottom: 5mm;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
-            color: #999;
-            text-align: center;
+        .placeholder {
+            display: none;
         }
         
         @media print {
@@ -432,41 +337,19 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            
-            .cards-container {
-                page-break-inside: avoid;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="cards-container">
-        <div class="card">
-            <div class="card-title">Firework QR Code</div>
-            <div class="card-subtitle">ID: ${fireworkId}</div>
-            
-            <img src="${qrImageUrl}" alt="QR Code" class="qr-code-large" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-            <div class="placeholder-large" style="display: none; width: 120mm; height: 120mm;">QR Code</div>
-            
-            <div class="card-description">
-                Scan this QR code with your smartphone to enjoy the firework display
-                <div class="url-text">${url}</div>
-            </div>
-        </div>
-        
-        <div class="card" style="justify-content: center;">
-            <div class="image-container">
-                ${originalImageDataUrl ?
-                `<img src="${originalImageDataUrl}" alt="Original Design" class="original-image-large" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                     <div class="placeholder-large" style="display: none;">Firework Design</div>` :
-                `<div class="placeholder-large">Firework Design</div>`
-            }
-            </div>
-        </div>
+    <div class="keychain-item qr-item">
+        <img src="${qrImageUrl}" alt="QR Code" class="qr-code-keychain" />
     </div>
     
-    <div class="cut-instructions">
-        Cut along the dotted lines to create individual cards
+    <div class="keychain-item image-item">
+        ${originalImageDataUrl ?
+                `<img src="${originalImageDataUrl}" alt="Firework Design" class="image-keychain" />` :
+                ''
+            }
     </div>
     
     <script>
@@ -477,7 +360,6 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                     window.print();
                 } catch (e) {
                     console.error('Print failed:', e);
-                    alert('印刷に失敗しました。手動でCtrl+P（またはCmd+P）を押して印刷してください。');
                 }
             }, 1000);
         };
@@ -505,19 +387,8 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                     });
                 } else {
                     URL.revokeObjectURL(blobUrl);
-                    const link = document.createElement('a');
-                    link.href = blobUrl;
-                    link.download = `firework-print-${fireworkId}.html`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-
-                    setTimeout(() => {
-                        URL.revokeObjectURL(blobUrl);
-                    }, 1000);
-
                     if (onError) {
-                        onError('Pop-up blocked. HTML file downloaded instead. Open it and print manually.');
+                        onError('Pop-up blocked. Please check your browser settings and try again.');
                     }
                 }
             } catch (windowError) {
@@ -535,7 +406,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
         } finally {
             setIsGeneratingPrint(false);
         }
-    }, [qrImageUrl, fireworkId, originalImageFile, onError, url]);
+    }, [qrImageUrl, fireworkId, originalImageFile, onError, url]); // fireworkIdとurlを追加
 
     const handleImageError = useCallback(() => {
         console.error('QR Code image failed to load');
@@ -646,9 +517,9 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                         opacity: isGeneratingPrint ? 0.6 : 1,
                         cursor: isGeneratingPrint ? 'not-allowed' : 'pointer',
                     }}
-                    title="Generate printable page with QR code and image"
+                    title="Generate printable page for acrylic keychain (45×32mm inserts)"
                 >
-                    {isGeneratingPrint ? '⏳ Generating...' : '🖨️ Print Layout'}
+                    {isGeneratingPrint ? '⏳ Generating...' : '🔑 Keychain Print'}
                 </button>
 
                 <button
@@ -659,9 +530,9 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                         opacity: isGeneratingPDF ? 0.6 : 1,
                         cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
                     }}
-                    title="Download PDF with QR code and image cards"
+                    title="Download PDF for acrylic keychain (30×45mm inserts)"
                 >
-                    {isGeneratingPDF ? '⏳ Generating...' : '📄 Download PDF'}
+                    {isGeneratingPDF ? '⏳ Generating...' : '📄 Keychain PDF'}
                 </button>
             </div>
 
@@ -680,7 +551,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                 marginTop: '0.5rem',
                 fontStyle: 'italic'
             }}>
-                ✨ Clean layout with QR code and image side-by-side for printing
+                🔑 45×32mm inserts for acrylic keychains (QR back, design front)
             </div>
         </div>
     );
