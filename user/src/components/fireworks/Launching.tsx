@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, memo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import Sound from '../../assets/打ち上げ花火1.mp3'
+// import Sound from '../../assets/打ち上げ花火1.mp3'
 import * as THREE from 'three'
 
 type Props = {
@@ -8,6 +8,7 @@ type Props = {
   to: THREE.Vector3
   duration: number // 打ち上げの持続時間
   color?: THREE.ColorRepresentation
+  isSoundEnabled?: boolean  // 音の有無
   onComplete?: () => void
 }
 
@@ -17,6 +18,7 @@ const Launching = memo(function Launching({
   to,
   duration, 
   color = 'white',
+  isSoundEnabled = true,
   onComplete = () => {}
 }: Props) {
   const maxTrailLength = 50    // トレイルの最大長さ
@@ -33,12 +35,12 @@ const Launching = memo(function Launching({
   const initTime = useRef<number | null>(null)  // シーンが配置されてからの時間を保持する変数
   
   const [isCompleted, setIsCompleted] = useState(false) // 花火の完了状態を管理
-  const audio = useRef(new Audio(Sound)) // 音声の参照を保持
-  
+  const audio = isSoundEnabled ? useRef(new Audio('/audio/fireworks.mp3')) : null // 音声の参照を保持
+
   // マウント時とアンマウント時の処理
   useEffect(() => {
     // 音を再生
-    audio.current.play();
+    audio?.current?.play();
     // ====== マウント時の処理 ======
     // パーティクルのgeometryを初期化
     const geometry = new THREE.BufferGeometry()
@@ -123,7 +125,7 @@ const Launching = memo(function Launching({
         color={color}
         vertexColors={false}
         blending={THREE.AdditiveBlending}
-        size={0.5}
+        size={0.7}
         opacity={0.8}
         transparent={true} // 透明度を有効化
         // sizeAttenuation={true}  // サイズの減衰を有効化

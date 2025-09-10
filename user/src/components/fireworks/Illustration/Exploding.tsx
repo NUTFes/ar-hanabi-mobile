@@ -14,6 +14,7 @@ interface Props {
   position?: THREE.Vector3; // 花火の打ち上げの中心位置
   size?: number; // 花火のサイズ(パーティクルではなくて花弁の大きさ)
   data: boolean[][] // 花火のイラストデータ(booleanの2次元配列)
+  starSize?: number; // 星のサイズ
   onComplete?: () => void;  // 花火が終了したときのコールバック
 }
 
@@ -22,6 +23,7 @@ const IllustrationExploding =  memo(function IllustrationExploding({
   color = 'white', 
   position = new THREE.Vector3(0, 0, 0), 
   size = 1, 
+  starSize = 0.2,
   data,
   onComplete = () => {}
 }: Props) {
@@ -35,8 +37,6 @@ const IllustrationExploding =  memo(function IllustrationExploding({
   const defaultVelocity = 0.3
   // 星のオフセット
   const starOffset = 0.01
-  // 星のサイズ
-  const starSize = 0.2
   
   // 星のパーティクルを描画するための参照
   const starPointsRef = useRef<THREE.Points>(null)  // ポイントの参照

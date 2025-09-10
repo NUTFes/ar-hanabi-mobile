@@ -31,7 +31,7 @@ export default function Home() {
 
   // URLパラメータからIDを取得
   const currentId = searchParams.get('id') || '1'
-  const validId = !isNaN(Number(currentId)) ? currentId : '1'
+  const validId = !isNaN(Number(currentId)) ? currentId : '1' // idが数値でない場合は1にフォールバック
   console.log('ID from URL:', validId)
   
   // APIから花火データを取得（条件付きで有効化）

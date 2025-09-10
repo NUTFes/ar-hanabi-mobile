@@ -39,6 +39,7 @@
     "orval": "^7.10.0",
     "rollup": "^3.29.5",
     "typescript": "^5.2.2",
-    "vite": "^7.0.6"
+    "vite": "^7.0.6",
+    "vite-plugin-pwa": "^1.0.3"
   }
 }
