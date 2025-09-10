@@ -24,7 +24,9 @@ import {
 } from '../utils/csvParser';
 import { useFinaleTimer } from '../hooks/useFinaleTimer';
 // CSVファイルをテキストとしてインポート
-import finaleTimelineData from '../assets/finale_timeline.csv?raw';
+// import finaleTimelineData from '../assets/finale_timeline.csv?raw';  // 通常ver
+// import finaleTimelineData from '../assets/finale_timeline_mini.csv?raw'; // 打ち上げ頻度を0.5小節ごとにしたver
+import finaleTimelineData from '../assets/finale_timeline_minimum.csv?raw'; // 打ち上げ頻度を0.5小節にし、花火の個数も減らしたver
 import SenrinGikuFireworks from '../components/fireworks/SenrinGiku/SenrinGikuFireworks';
 import { 
   logo,
@@ -294,6 +296,8 @@ const FinaleScene = forwardRef<FinaleSceneHandle>(( _, ref) => {
             <PeonyFireworks
               key={fw.id}
               {...props}
+              segments={10} // 分割数を指定
+              starSize={1} // 星のサイズを指定
             />
           );
         }
@@ -303,6 +307,8 @@ const FinaleScene = forwardRef<FinaleSceneHandle>(( _, ref) => {
             <ChrysanthemumFireworks
               key={fw.id}
               {...props}
+              segments={10} // 分割数を指定
+              starSize={0.5} // 星のサイズを指定
             />
           );
         }
@@ -312,6 +318,7 @@ const FinaleScene = forwardRef<FinaleSceneHandle>(( _, ref) => {
             <SenrinGikuFireworks
               key={fw.id}
               {...props}
+              petalCount={20}
             />
           );
         }
