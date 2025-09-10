@@ -14,6 +14,8 @@ interface Props {
   color?: THREE.ColorRepresentation; // 花火の色
   position?: THREE.Vector3; // 花火の打ち上げの中心位置
   size?: number; // 花火のサイズ(パーティクルではなくて花弁の大きさ)
+  starSize?: number; // 星のサイズ(パーティクルの大きさ)
+  segments?: number; // 花火の分割数(星の数を決定するためのパラメータ)
   onComplete?: () => void; // 花火が終了したときのコールバック
 }
 
@@ -22,15 +24,14 @@ const PeonyExploding =  memo(function PeonyExploding({
   color = 'white', 
   position = new THREE.Vector3(0, 0, 0), 
   size = 1, 
+  starSize = 1,
+  segments = 15,
   onComplete = () => {}
 }: Props) {
   // 分割数（星の数を決定するためのパラメータ）
-  const segments = 15
   // const segments = 10
   // 星の総数（分割数の二乗）
   const starParticleCount = segments * segments
-  // 星のサイズ
-  const starSize = 1
   // 重力の強さ
   const gravity = 0.05
   // デフォルトの速度

@@ -16,6 +16,8 @@ interface FireworkProps {
   from?: THREE.Vector3 // 花火の打ち上げの始点
   to?: THREE.Vector3 // 花火の打ち上げの終点
   size?: number; // 花火のサイズ
+  starSize?: number; // 星のサイズ(パーティクルの大きさ)
+  segments?: number; // 花火の分割数(星の数を決定するためのパラメータ)
   isSoundEnabled?: boolean // 音の有無
   onComplete?: () => void; // 花火が終了したときのコールバック
 }
@@ -26,6 +28,8 @@ const ChrysanthemumFireworks =  memo(function ChrysanthemumFireworks({
   from = new THREE.Vector3(0, 0, 0),
   to = new THREE.Vector3(0, 1, 0), // 上方向に打ち上げ
   size = 1, 
+  starSize = 1,
+  segments = 13,
   isSoundEnabled = true,
   onComplete = () => {}
 }: FireworkProps) {
@@ -78,6 +82,8 @@ const ChrysanthemumFireworks =  memo(function ChrysanthemumFireworks({
           color={color}
           position={to}
           size={size}
+          starSize={starSize}
+          segments={segments}
           onComplete={() => {
             setIsExploding(false); // 爆発完了
             setIsCompleted(true);  // 花火が完了したとフラグを設定

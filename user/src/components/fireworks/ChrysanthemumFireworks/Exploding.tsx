@@ -13,6 +13,8 @@ interface Props {
   color?: THREE.ColorRepresentation; // 花火の色
   position?: THREE.Vector3; // 花火の打ち上げの中心位置
   size?: number; // 花火のサイズ(パーティクルではなくて花弁の大きさ)
+  starSize?: number; // 星のサイズ(パーティクルの大きさ)
+  segments?: number; // 花火の分割数(星の数を決定するためのパラメータ)
   onComplete?: () => void; // 花火が終了したときのコールバック
 }
 
@@ -21,10 +23,11 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
   color = 'white', 
   position = new THREE.Vector3(0, 0, 0), 
   size = 1, 
+  starSize = 1,
+  segments = 13,
   onComplete = () => {}
 }: Props) {
   // 分割数（星の数を決定するためのパラメータ）
-  const segments = 13
   // const segments = 10
   // 星の総数（分割数の二乗）
   const starParticleCount = segments * segments
@@ -33,7 +36,7 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
   // デフォルトの速度
   const defaultVelocity = 0.3
   // トレイルの最大長さ
-  const maxTrailLength = 2000
+  const maxTrailLength = 4000
   // const maxTrailLength = 1000
   // トレイルのパチパチのパーティクル数
   const trailParticleCount = 1
@@ -128,7 +131,7 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
     }
   }, [isCompleted, onComplete])
 
-  const frameCount = useRef(0) // フレーム数のカウンター
+  // const frameCount = useRef(0) // フレーム数のカウンター
   
   // フレームごとの更新
   useFrame(({clock}) => {
@@ -167,7 +170,7 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
       starPositions.current[i * 3 + 1] += vy
       starPositions.current[i * 3 + 2] += vz
       
-      if(frameCount.current % 3 === 0) { // 一定フレームごとにトレイルを追加
+      // if(frameCount.current % 3 === 0) { // 一定フレームごとにトレイルを追加
       // if(frameCount.current % 8 === 0) { // 一定フレームごとにトレイルを追加
         // 軌跡を追加
         for (let j = 0; j < trailParticleCount; j++) {
@@ -177,7 +180,7 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
           trailPositions.current[lastIndex + 1] = starPositions.current[i * 3 + 1]
           trailPositions.current[lastIndex + 2] = starPositions.current[i * 3 + 2]
         }
-      }
+      // }
     }
     
     // 更新を反映
@@ -187,7 +190,7 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
     trailPosAttr.needsUpdate = true
     
     // フレーム数をカウントアップ
-    frameCount.current++
+    // frameCount.current++
   })
 
   return (
@@ -195,7 +198,7 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
       <points ref={starPointsRef}>
         <bufferGeometry />
         <pointsMaterial
-          size={0.5}
+          size={starSize}
           color={color}
           vertexColors={false}
           depthWrite={false}
@@ -207,7 +210,7 @@ const ChrysanthemumExploding =  memo(function ChrysanthemumExploding({
       <points ref={trailPointsRef}>
         <bufferGeometry />
         <pointsMaterial
-          size={0.5}
+          size={starSize}
           color={color}
           vertexColors={false}
           // opacity={0.8}

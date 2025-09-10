@@ -16,6 +16,8 @@ interface FireworkProps {
   from?: THREE.Vector3 // 花火の打ち上げの始点
   to?: THREE.Vector3 // 花火の打ち上げの終点
   size?: number; // 花火のサイズ
+  starSize?: number; // 星のサイズ
+  segments?: number; // 花火の分割数(星の数を決定するためのパラメータ)
   layers?: number; // 花弁の層数
   isSoundEnabled?: boolean // 音の有無
   onComplete?: () => void; // 花火が終了したときのコールバック
@@ -27,6 +29,8 @@ const PeonyFireworks =  memo(function PeonyFireworks({
   from = new THREE.Vector3(0, 0, 0),
   to = new THREE.Vector3(0, 1, 0), // 上方向に打ち上げ
   size = 1, 
+  starSize = 1,
+  segments = 15,
   layers = 1, // 花弁の層数
   isSoundEnabled = true,
   onComplete = () => {}
@@ -85,6 +89,8 @@ const PeonyFireworks =  memo(function PeonyFireworks({
               color={shiftHue(baseColor, i * 120)}
               position={to}
               size={size / (i / 1 + 1)}
+              starSize={starSize}
+              segments={segments}
               onComplete={() => {
               setIsExploding(false); // 爆発完了
               setIsCompleted(true);  // 花火が完了したとフラグを設定

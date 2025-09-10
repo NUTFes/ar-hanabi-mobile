@@ -15,6 +15,9 @@ interface FireworkProps {
   to?: THREE.Vector3 // 花火の打ち上げの終点
   // size?: number; // 花火の半径
   petalCount?: number; // 花弁の層数
+  petalSize?: number; // 花弁のサイズ
+  petalStarSize?: number; // 花弁の星のサイズ
+  petalSegments?: number; // 花弁の分割数(星の数を決定するためのパラメータ)
   isSoundEnabled?: boolean // 音の有無
   onComplete?: () => void; // 花火が終了したときのコールバック
 }
@@ -31,6 +34,9 @@ const SenrinGikuFireworks =  memo(function SenrinGikuFireworks({
   to = new THREE.Vector3(0, 1, 0), // 上方向に打ち上げ
   // size = 0.3,
   petalCount = 10, // 花弁の層数
+  petalSize = 0.4, // 花弁のサイズ
+  petalStarSize = 0.7, // 花弁の星のサイズ
+  petalSegments = 10, // 花弁の分割数(星の数を決定するためのパラメータ)
   isSoundEnabled = true,
   onComplete = () => {}
 }: FireworkProps) {
@@ -96,7 +102,9 @@ const SenrinGikuFireworks =  memo(function SenrinGikuFireworks({
           {Array.from({ length: petalCount }).map((_, i) => (
             <SenrinGikuExploding
               key={i}
-              size={0.7}
+              size={petalSize}
+              starSize={petalStarSize}
+              segments={petalSegments}
               color={petals.current[i].color}
               position={new THREE.Vector3(
                 petals.current[i].position.x,
