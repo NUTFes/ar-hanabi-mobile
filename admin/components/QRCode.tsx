@@ -406,7 +406,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
         } finally {
             setIsGeneratingPrint(false);
         }
-    }, [qrImageUrl, fireworkId, originalImageFile, onError, url]); // fireworkIdとurlを追加
+    }, [qrImageUrl, originalImageFile, onError]); // fireworkIdとurlを追加
 
     const handleImageError = useCallback(() => {
         console.error('QR Code image failed to load');

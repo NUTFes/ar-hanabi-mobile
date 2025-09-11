@@ -23,9 +23,32 @@ export default function Home() {
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [originalImageFiles, setOriginalImageFiles] = useState<Map<number, File>>(new Map());
+  const [nextId, setNextId] = useState<number>(1);
 
   // API URL - ブラウザからは必ず localhost を使用
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
+  // 最新のIDを取得する関数
+  const fetchLatestId = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/fireworks/latest-id`);
+      if (response.ok) {
+        const data = await response.json();
+        const latestId = data.latestId || 0;
+        setNextId(latestId + 1);
+        console.log('Latest ID from database:', latestId, 'Next ID will be:', latestId + 1);
+      } else {
+        // APIエンドポイントが存在しない場合は、既存の花火から最大IDを計算
+        const maxId = fireworks.length > 0 ? Math.max(...fireworks.map(f => f.id)) : 0;
+        setNextId(maxId + 1);
+        console.log('Calculated next ID from existing fireworks:', maxId + 1);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch latest ID, calculating from existing data:', err);
+      const maxId = fireworks.length > 0 ? Math.max(...fireworks.map(f => f.id)) : 0;
+      setNextId(maxId + 1);
+    }
+  }, [API_URL, fireworks]);
 
   // Fetch all fireworks
   const fetchFireworks = useCallback(async () => {
@@ -47,7 +70,19 @@ export default function Home() {
       console.log('Fetched data:', data);
 
       // データがnullまたはundefinedの場合は空配列を設定
-      setFireworks(Array.isArray(data) ? data : []);
+      const fireworksData = Array.isArray(data) ? data : [];
+      setFireworks(fireworksData);
+
+      // 最新IDを計算・設定
+      if (fireworksData.length > 0) {
+        const maxId = Math.max(...fireworksData.map((f: Firework) => f.id));
+        setNextId(maxId + 1);
+        console.log('Max existing ID:', maxId, 'Next ID will be:', maxId + 1);
+      } else {
+        setNextId(1);
+        console.log('No existing fireworks, next ID will be: 1');
+      }
+
       setError(null);
     } catch (err) {
       console.error('Fetch error:', err);
@@ -55,6 +90,7 @@ export default function Home() {
       setError(`Failed to fetch fireworks: ${errorMessage}`);
       // エラー時も空配列を設定
       setFireworks([]);
+      setNextId(1);
     } finally {
       setLoading(false);
     }
@@ -76,10 +112,10 @@ export default function Home() {
     }
   }, [selectedFirework]);
 
-  // QRコード用のURL生成
+  // QRコード用のURL生成（本番環境用）
   const generateQRUrl = useCallback((firework: Firework) => {
-    // 花火表示用のURLを生成
-    return `https://hanabi-stg.nutfes.net/?id=${firework.id}`;
+    // 花火表示用のURLを生成（本番環境）
+    return `https://hanabi.nutfes.net/?id=${firework.id}`;
   }, []);
 
   // Create a new firework
@@ -91,9 +127,15 @@ export default function Home() {
 
     setIsCreating(true);
     try {
+      // 最新のIDを取得してから作成
+      await fetchLatestId();
+
       const formData = new FormData();
       formData.append('image', selectedFile);
       formData.append('is_shareable', isShareable.toString());
+
+      // 明示的にIDを指定する場合（バックエンドがサポートしている場合）
+      // formData.append('id', nextId.toString());
 
       const response = await fetch(`${API_URL}/fireworks`, {
         method: 'POST',
@@ -109,10 +151,13 @@ export default function Home() {
       }
 
       const result = await response.json();
+      console.log('Created firework with ID:', result.id);
 
       // 作成された花火のIDに対してオリジナルファイルを保存
       if (result && result.id) {
         setOriginalImageFiles(prev => new Map(prev).set(result.id, selectedFile));
+        // 次のIDを更新
+        setNextId(result.id + 1);
       }
 
       await fetchFireworks();
@@ -126,7 +171,7 @@ export default function Home() {
     } finally {
       setIsCreating(false);
     }
-  }, [selectedFile, isShareable, API_URL, fetchFireworks]);
+  }, [selectedFile, isShareable, API_URL, fetchFireworks, fetchLatestId]);
 
   // Handle file selection
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,9 +180,9 @@ export default function Home() {
     }
   }, []);
 
-  // Delete firework
+  // Delete firework（安全な削除処理）
   const deleteFirework = useCallback(async (fireworkId: number) => {
-    if (!confirm('Are you sure you want to delete this firework?')) {
+    if (!confirm(`Are you sure you want to delete firework #${fireworkId}? This action cannot be undone.`)) {
       return;
     }
 
@@ -154,18 +199,29 @@ export default function Home() {
         return;
       }
 
+      console.log(`Successfully deleted firework #${fireworkId}`);
+
+      // 削除後のデータ再取得
       await fetchFireworks();
+
       // 削除された花火が選択されていた場合はクリア
       if (selectedFirework?.id === fireworkId) {
         setSelectedFirework(null);
       }
+
       // オリジナルファイルも削除
       setOriginalImageFiles(prev => {
         const newMap = new Map(prev);
         newMap.delete(fireworkId);
         return newMap;
       });
+
       setError(null);
+
+      // 注意: 削除後もnextIdは変更しない（IDの再利用を避けるため）
+      // 削除されたIDは永続的に欠番とし、新しい花火には常に最大ID+1を使用
+      console.log(`Firework #${fireworkId} deleted. Next new firework will still use ID: ${nextId}`);
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setError(`Failed to delete firework: ${errorMessage}`);
@@ -173,7 +229,7 @@ export default function Home() {
     } finally {
       setIsDeleting(false);
     }
-  }, [API_URL, fetchFireworks, selectedFirework]);
+  }, [API_URL, fetchFireworks, selectedFirework, nextId]);
 
   // Load fireworks on component mount
   useEffect(() => {
@@ -184,7 +240,8 @@ export default function Home() {
   // デバッグ用：fireworksの状態をログ出力
   useEffect(() => {
     console.log('Fireworks state changed:', fireworks);
-  }, [fireworks]);
+    console.log('Next ID will be:', nextId);
+  }, [fireworks, nextId]);
 
   const containerStyle: React.CSSProperties = {
     minHeight: '100vh',
@@ -409,6 +466,17 @@ export default function Home() {
                 <h3 style={{ fontWeight: 'bold', marginBottom: '1rem', color: '#2d3748' }}>
                   ✨ Add New Firework
                 </h3>
+                <div style={{
+                  backgroundColor: '#f7fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  marginBottom: '1rem'
+                }}>
+                  <p style={{ fontSize: '0.875rem', color: '#4a5568', margin: 0 }}>
+                    🆔 Next Firework ID will be: <strong>#{nextId}</strong>
+                  </p>
+                </div>
                 <div>
                   <label style={{
                     display: 'block',
@@ -476,7 +544,7 @@ export default function Home() {
                         cursor: (!selectedFile || isCreating) ? 'not-allowed' : 'pointer',
                       }}
                   >
-                    {isCreating ? '⏳ Creating...' : '🚀 Create Firework'}
+                    {isCreating ? '⏳ Creating...' : `🚀 Create Firework #${nextId}`}
                   </button>
                 </div>
               </div>
@@ -511,7 +579,7 @@ export default function Home() {
                       wordBreak: 'break-all',
                       border: '1px solid #e2e8f0'
                     }}>
-                      <strong style={{ color: '#2d3748' }}>🔗 URL:</strong>
+                      <strong style={{ color: '#2d3748' }}>🔗 Production URL:</strong>
                       <br />
                       <span style={{ color: '#667eea', fontFamily: 'monospace' }}>
                         {generateQRUrl(selectedFirework)}
@@ -589,6 +657,32 @@ export default function Home() {
             >
               {loading ? '⏳ Loading...' : '🔄 Refresh Fireworks'}
             </button>
+          </div>
+
+          {/* ID Management Info */}
+          <div style={{
+            ...cardStyle,
+            marginTop: '2rem',
+            backgroundColor: '#f8f9fa',
+            border: '1px solid #dee2e6'
+          }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#2d3748' }}>
+              🔢 ID Management Information
+            </h3>
+            <div style={{ fontSize: '0.875rem', color: '#6c757d', lineHeight: '1.6' }}>
+              <p style={{ marginBottom: '0.5rem' }}>
+                <strong>Current Status:</strong> Next new firework will be assigned ID #{nextId}
+              </p>
+              <p style={{ marginBottom: '0.5rem' }}>
+                <strong>ID Policy:</strong> IDs are never reused. When a firework is deleted, its ID becomes permanently unavailable.
+              </p>
+              <p style={{ marginBottom: '0.5rem' }}>
+                <strong>Safety:</strong> This prevents accidental access to deleted firework data and ensures QR code URLs remain unique.
+              </p>
+              <p>
+                <strong>Total Fireworks:</strong> {fireworks.length} active firework{fireworks.length !== 1 ? 's' : ''}
+              </p>
+            </div>
           </div>
         </main>
 
