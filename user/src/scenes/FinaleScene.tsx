@@ -296,7 +296,7 @@ const FinaleScene = forwardRef<FinaleSceneHandle>(( _, ref) => {
             <PeonyFireworks
               key={fw.id}
               {...props}
-              segments={10} // 分割数を指定
+              segments={13} // 分割数を指定
               starSize={1} // 星のサイズを指定
             />
           );
@@ -318,7 +318,8 @@ const FinaleScene = forwardRef<FinaleSceneHandle>(( _, ref) => {
             <SenrinGikuFireworks
               key={fw.id}
               {...props}
-              petalCount={20}
+              petalCount={4}
+              petalStarSize={1}
             />
           );
         }
