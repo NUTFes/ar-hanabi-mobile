@@ -14,7 +14,7 @@ interface FireworkProps {
   from?: THREE.Vector3 // 花火の打ち上げの始点
   to?: THREE.Vector3 // 花火の打ち上げの終点
   // size?: number; // 花火の半径
-  petalCount?: number; // 花弁の層数
+  petalCount?: number; // 花弁の数(各花弁は5つに分割される)
   petalSize?: number; // 花弁のサイズ
   petalStarSize?: number; // 花弁の星のサイズ
   petalSegments?: number; // 花弁の分割数(星の数を決定するためのパラメータ)
@@ -33,7 +33,7 @@ const SenrinGikuFireworks =  memo(function SenrinGikuFireworks({
   from = new THREE.Vector3(0, 0, 0),
   to = new THREE.Vector3(0, 1, 0), // 上方向に打ち上げ
   // size = 0.3,
-  petalCount = 10, // 花弁の層数
+  petalCount = 4, // 花弁の数
   petalSize = 0.4, // 花弁のサイズ
   petalStarSize = 0.7, // 花弁の星のサイズ
   petalSegments = 10, // 花弁の分割数(星の数を決定するためのパラメータ)
@@ -51,11 +51,7 @@ const SenrinGikuFireworks =  memo(function SenrinGikuFireworks({
     // ====== マウント時の処理 ======
     // 千輪菊の各花弁の位置と色を初期化
     petals.current = Array.from({ length: petalCount }).map((_) => ({
-      position: to.clone().add(new THREE.Vector3(
-        (Math.random() - 0.5) * 50, // X方向にランダムなオフセット
-        (Math.random() - 0.5) * 50, // Y方向にランダムなオフセット
-        0
-      )),
+      position: to,
       // ランダムな色を作成
       color: new THREE.Color().setHSL(Math.random(), 0.95, 0.5),
     }))

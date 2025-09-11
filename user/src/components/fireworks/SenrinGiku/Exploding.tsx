@@ -19,7 +19,7 @@ interface Props {
   onComplete?: () => void; // 花火が終了したときのコールバック
 }
 
-// 千輪菊の花弁
+// 千輪菊の花弁(5つの花弁が爆発する)
 const SenrinGikuExploding =  memo(function SenrinGikuExploding({ 
   color = 'white', 
   position = new THREE.Vector3(0, 0, 0), 
@@ -39,10 +39,12 @@ const SenrinGikuExploding =  memo(function SenrinGikuExploding({
   const gravity = 0.05
   // デフォルトの速度
   const defaultVelocity = 0.3
+  // 花弁の数
+  const petalsCount = 5;
   
   // 星のパーティクルを描画するための参照
   const starPointsRef = useRef<THREE.Points>(null)  // ポイントの参照
-  const starPositions = useRef(new Float32Array(3 * starParticleCount)) // パーティクルの位置を格納する配列
+  const starPositions = useRef(new Float32Array(3 * starParticleCount * petalsCount)) // パーティクルの位置を格納する配列
   const starVelocities = useRef<THREE.Vector3[]>([]) // パーティクルの速度を格納する配列
   const initTime = useRef<number | null>(null) // シーンが配置されてからの時間を保持する変数
   
@@ -61,13 +63,19 @@ const SenrinGikuExploding =  memo(function SenrinGikuExploding({
     // ポイントのジオメトリを設定
     starPointsRef.current!.geometry = starGeometry
     
+    // 各花弁のランダムなオフセットを生成
+    const randomX = Array.from({ length: petalsCount }).map(() => (Math.random() - 0.5) * 50)
+    const randomY = Array.from({ length: petalsCount }).map(() => (Math.random() - 0.5) * 50)
+
     // 星のパーティクルの初期化
     for (let i = 0, theta = 0; theta < 2 * Math.PI; theta += 2 * Math.PI / segments) {
       for (let phi = 0; phi < 2 * Math.PI; phi += 2 * Math.PI / segments) {
-        // 初期座標
-        starPositions.current[i * 3 + 0] = position.x
-        starPositions.current[i * 3 + 1] = position.y
-        starPositions.current[i * 3 + 2] = position.z
+        for(let p = 0; p < petalsCount; p++) {
+          // 初期座標
+          starPositions.current[i * 3 + 0 + p * starParticleCount * 3] = position.x + randomX[p]  // X方向にランダムなオフセット
+          starPositions.current[i * 3 + 1 + p * starParticleCount * 3] = position.y + randomY[p]  // Y方向にランダムなオフセット
+          starPositions.current[i * 3 + 2 + p * starParticleCount * 3] = position.z
+        }
         // 速度ベクトル
         starVelocities.current[i] = new THREE.Vector3(
           Math.sin(theta) * Math.cos(phi) * size,
@@ -129,10 +137,12 @@ const SenrinGikuExploding =  memo(function SenrinGikuExploding({
       const vy = starVelocities.current[i].y - gravity // 重力を適用
       const vz = starVelocities.current[i].z
       
-      // 位置を更新
-      starPositions.current[i * 3 + 0] += vx
-      starPositions.current[i * 3 + 1] += vy
-      starPositions.current[i * 3 + 2] += vz
+      // 各花弁の位置を更新
+      for(let p = 0; p < petalsCount; p++) {
+        starPositions.current[i * 3 + 0 + p * starParticleCount * 3] += vx
+        starPositions.current[i * 3 + 1 + p * starParticleCount * 3] += vy
+        starPositions.current[i * 3 + 2 + p * starParticleCount * 3] += vz
+      }
     }
     
     // 更新を反映

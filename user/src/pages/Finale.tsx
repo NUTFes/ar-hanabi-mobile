@@ -58,13 +58,14 @@ export default function Finale() {
     borderRadius: '8px',
     border: 'none',
     fontWeight: 'bold',
-    minWidth: '200px',
+    minWidth: '150px',
     zIndex: 1000,
   };
 
   const primaryButtonStyle: React.CSSProperties = {
     ...buttonStyle,
-    backgroundColor: '#e74c3c',
+    // backgroundColor: '#e74c3c',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     color: 'white',
     boxShadow: '0 4px 8px rgba(231, 76, 60, 0.3)',
   };
@@ -78,23 +79,24 @@ export default function Finale() {
 
   const infoStyle: React.CSSProperties = {
     position: 'absolute',
-    top: '20px',
+    // top: '20px',
+    bottom: '10px',
     left: '50%',
     transform: 'translateX(-50%)',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     color: 'white',
     padding: '16px 24px',
     borderRadius: '12px',
     fontSize: '18px',
     fontWeight: 'bold',
     textAlign: 'center',
-    minWidth: '300px',
+    minWidth: '150px',
     zIndex: 1000,
   };
 
   const progressBarStyle: React.CSSProperties = {
     position: 'absolute',
-    bottom: '200px',
+    bottom: '70px',
     left: '20px',
     right: '20px',
     height: '8px',
@@ -106,7 +108,7 @@ export default function Finale() {
 
   const progressFillStyle: React.CSSProperties = {
     height: '100%',
-    backgroundColor: '#e74c3c',
+    backgroundColor: '#ddddddff',
     width: `${progress}%`,
     transition: 'width 0.1s ease',
     borderRadius: '4px',
@@ -121,8 +123,12 @@ export default function Finale() {
       
       {/* フィナーレ情報表示 */}
       <div style={infoStyle}>
-        <div>🎆 FINALE 🎆</div>
-        <div style={{ fontSize: '14px', marginTop: '8px', opacity: 0.9 }}>
+        {/* <div>🎆 FINALE 🎆</div> */}
+        <div style={{ 
+          fontSize: '14px', 
+          // marginTop: '8px', 
+          opacity: 0.9 
+        }}>
           {formatTime(currentTime)} / {formatTime(totalDuration)}
         </div>
       </div>
@@ -138,7 +144,8 @@ export default function Finale() {
         style={{
           ...primaryButtonStyle,
           backgroundColor: isPlaying ? '#f39c12' : '#e74c3c',
-          bottom: '140px',
+          bottom: '10px',
+          left: '70%',
         }}
       >
         {isPlaying ? '⏸️ 一時停止' : '▶️ フィナーレ開始'}
@@ -149,7 +156,8 @@ export default function Finale() {
         onClick={handleResetFinale}
         style={{
           ...secondaryButtonStyle,
-          bottom: '80px',
+          bottom: '10px',
+          left: '90%',
         }}
       >
         🔄 リセット
