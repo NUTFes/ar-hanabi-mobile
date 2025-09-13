@@ -21,12 +21,159 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isShareable, setIsShareable] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
   const [originalImageFiles, setOriginalImageFiles] = useState<Map<number, File>>(new Map());
   const [nextId, setNextId] = useState<number>(1);
 
   // API URL - ブラウザからは必ず localhost を使用
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
+  // localStorageのキー生成
+  const getImageStorageKey = useCallback((fireworkId: number) => {
+    return `firework_image_${fireworkId}`;
+  }, []);
+
+  // 画像をlocalStorageに保存
+  const saveImageToLocalStorage = useCallback(async (fireworkId: number, file: File) => {
+    try {
+      return new Promise<void>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const result = reader.result as string;
+            const imageData = {
+              dataUrl: result,
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type,
+              lastModified: file.lastModified,
+              savedAt: Date.now()
+            };
+            localStorage.setItem(getImageStorageKey(fireworkId), JSON.stringify(imageData));
+            console.log(`Saved image to localStorage for firework #${fireworkId}`);
+            resolve();
+          } catch (error) {
+            console.error('Failed to save image to localStorage:', error);
+            reject(error);
+          }
+        };
+        reader.onerror = () => {
+          console.error('Failed to read file for localStorage');
+          reject(new Error('Failed to read file'));
+        };
+        reader.readAsDataURL(file);
+      });
+    } catch (error) {
+      console.error('Error saving image to localStorage:', error);
+      throw error;
+    }
+  }, [getImageStorageKey]);
+
+  // localStorageから画像を読み込み
+  const loadImageFromLocalStorage = useCallback(async (fireworkId: number): Promise<File | null> => {
+    try {
+      const stored = localStorage.getItem(getImageStorageKey(fireworkId));
+      if (!stored) {
+        return null;
+      }
+
+      const imageData = JSON.parse(stored);
+      if (!imageData.dataUrl || !imageData.fileName) {
+        console.warn(`Invalid image data for firework #${fireworkId}`);
+        return null;
+      }
+
+      // Base64からBlobを作成
+      const response = await fetch(imageData.dataUrl);
+      const blob = await response.blob();
+
+      // BlobからFileオブジェクトを作成
+      const file = new File([blob], imageData.fileName, {
+        type: imageData.fileType || 'image/jpeg',
+        lastModified: imageData.lastModified || Date.now()
+      });
+
+      console.log(`Loaded image from localStorage for firework #${fireworkId}: ${file.name}`);
+      return file;
+    } catch (error) {
+      console.error(`Error loading image from localStorage for firework #${fireworkId}:`, error);
+      return null;
+    }
+  }, [getImageStorageKey]);
+
+  // 全ての花火の画像をlocalStorageから復元
+  const loadAllImagesFromLocalStorage = useCallback(async (fireworkList: Firework[]) => {
+    if (fireworkList.length === 0) {
+      setOriginalImageFiles(new Map());
+      return;
+    }
+
+    console.log('Loading images from localStorage...');
+    const imageMap = new Map<number, File>();
+
+    await Promise.all(
+        fireworkList.map(async (firework) => {
+          try {
+            const file = await loadImageFromLocalStorage(firework.id);
+            if (file) {
+              imageMap.set(firework.id, file);
+            }
+          } catch (error) {
+            console.error(`Failed to load image for firework #${firework.id}:`, error);
+          }
+        })
+    );
+
+    setOriginalImageFiles(imageMap);
+    console.log(`Restored ${imageMap.size} images from localStorage`);
+  }, [loadImageFromLocalStorage]);
+
+  // localStorage から画像を削除
+  const removeImageFromLocalStorage = useCallback((fireworkId: number) => {
+    try {
+      localStorage.removeItem(getImageStorageKey(fireworkId));
+      console.log(`Removed image from localStorage for firework #${fireworkId}`);
+    } catch (error) {
+      console.error(`Failed to remove image from localStorage for firework #${fireworkId}:`, error);
+    }
+  }, [getImageStorageKey]);
+
+  // 古い画像データのクリーンアップ（30日以上古いものを削除）
+  const cleanupOldImages = useCallback(() => {
+    try {
+      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+      const keysToRemove: string[] = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('firework_image_')) {
+          try {
+            const stored = localStorage.getItem(key);
+            if (stored) {
+              const imageData = JSON.parse(stored);
+              if (imageData.savedAt && imageData.savedAt < thirtyDaysAgo) {
+                keysToRemove.push(key);
+              }
+            }
+          } catch {
+            // 不正なデータは削除対象に追加
+            keysToRemove.push(key);
+          }
+        }
+      }
+
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log(`Cleaned up old image: ${key}`);
+      });
+
+      if (keysToRemove.length > 0) {
+        console.log(`Cleaned up ${keysToRemove.length} old images from localStorage`);
+      }
+    } catch (error) {
+      console.error('Error during localStorage cleanup:', error);
+    }
+  }, []);
 
   // 最新のIDを取得する関数
   const fetchLatestId = useCallback(async () => {
@@ -63,6 +210,8 @@ export default function Home() {
         console.error('Fetch failed:', errorMessage);
         setError(`Failed to fetch fireworks: ${errorMessage}`);
         setFireworks([]);
+        // 修正点: エラー時もlocalStorageから画像をクリア
+        setOriginalImageFiles(new Map());
         return;
       }
 
@@ -72,6 +221,9 @@ export default function Home() {
       // データがnullまたはundefinedの場合は空配列を設定
       const fireworksData = Array.isArray(data) ? data : [];
       setFireworks(fireworksData);
+
+      // 修正点: ここでlocalStorageから画像を復元する
+      await loadAllImagesFromLocalStorage(fireworksData);
 
       // 最新IDを計算・設定
       if (fireworksData.length > 0) {
@@ -94,7 +246,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [API_URL]);
+  }, [API_URL, loadAllImagesFromLocalStorage]); // 依存配列に loadAllImagesFromLocalStorage を追加
 
   // 花火を選択したときの処理
   const selectFirework = useCallback((firework: Firework) => {
@@ -134,9 +286,6 @@ export default function Home() {
       formData.append('image', selectedFile);
       formData.append('is_shareable', isShareable.toString());
 
-      // 明示的にIDを指定する場合（バックエンドがサポートしている場合）
-      // formData.append('id', nextId.toString());
-
       const response = await fetch(`${API_URL}/fireworks`, {
         method: 'POST',
         body: formData,
@@ -156,6 +305,16 @@ export default function Home() {
       // 作成された花火のIDに対してオリジナルファイルを保存
       if (result && result.id) {
         setOriginalImageFiles(prev => new Map(prev).set(result.id, selectedFile));
+
+        // localStorageにも保存
+        try {
+          await saveImageToLocalStorage(result.id, selectedFile);
+          console.log(`Saved original image to localStorage for firework #${result.id}`);
+        } catch (storageError) {
+          console.warn('Failed to save image to localStorage:', storageError);
+          // localStorageエラーは致命的ではないので続行
+        }
+
         // 次のIDを更新
         setNextId(result.id + 1);
       }
@@ -171,7 +330,7 @@ export default function Home() {
     } finally {
       setIsCreating(false);
     }
-  }, [selectedFile, isShareable, API_URL, fetchFireworks, fetchLatestId]);
+  }, [selectedFile, isShareable, API_URL, fetchFireworks, fetchLatestId, saveImageToLocalStorage]);
 
   // Handle file selection
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,13 +339,15 @@ export default function Home() {
     }
   }, []);
 
-  // Delete firework（安全な削除処理）
+  // Delete firework（安全な削除処理）- 個別の削除状態管理
   const deleteFirework = useCallback(async (fireworkId: number) => {
     if (!confirm(`Are you sure you want to delete firework #${fireworkId}? This action cannot be undone.`)) {
       return;
     }
 
-    setIsDeleting(true);
+    // 個別の削除状態を管理
+    setDeletingIds(prev => new Set(prev).add(fireworkId));
+
     try {
       const response = await fetch(`${API_URL}/fireworks/${fireworkId}`, {
         method: 'DELETE',
@@ -216,10 +377,11 @@ export default function Home() {
         return newMap;
       });
 
+      // localStorageからも削除
+      removeImageFromLocalStorage(fireworkId);
+
       setError(null);
 
-      // 注意: 削除後もnextIdは変更しない（IDの再利用を避けるため）
-      // 削除されたIDは永続的に欠番とし、新しい花火には常に最大ID+1を使用
       console.log(`Firework #${fireworkId} deleted. Next new firework will still use ID: ${nextId}`);
 
     } catch (err) {
@@ -227,15 +389,31 @@ export default function Home() {
       setError(`Failed to delete firework: ${errorMessage}`);
       console.error('Error deleting firework:', err);
     } finally {
-      setIsDeleting(false);
+      // 削除状態をクリア
+      setDeletingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fireworkId);
+        return newSet;
+      });
     }
-  }, [API_URL, fetchFireworks, selectedFirework, nextId]);
+  }, [API_URL, fetchFireworks, selectedFirework, nextId, removeImageFromLocalStorage]);
 
   // Load fireworks on component mount
   useEffect(() => {
     console.log('Component mounted, fetching fireworks...');
     fetchFireworks();
   }, [fetchFireworks]);
+
+  // コンポーネントマウント時に古い画像データをクリーンアップ
+  useEffect(() => {
+    cleanupOldImages();
+  }, [cleanupOldImages]);
+
+  // 🔍 デバッグ: コンポーネント情報をログ出力
+  useEffect(() => {
+    console.log(`🏁 [COMPONENT] Fireworks Admin loaded at ${new Date().toISOString()}`);
+    console.log(`📊 [COMPONENT] Features: create, delete, QR generation, localStorage persistence`);
+  }, []);
 
   // デバッグ用：fireworksの状態をログ出力
   useEffect(() => {
@@ -296,7 +474,7 @@ export default function Home() {
     fontWeight: '600',
     fontSize: '0.875rem',
     transition: 'all 0.2s ease',
-    boxShadow: '0 2px 4px rgba(56, 178, 172, 0.3)',
+    boxShadow: '0 2px 4px rgba56, 178, 172, 0.3)',
   };
 
   const dangerButtonStyle: React.CSSProperties = {
@@ -312,7 +490,6 @@ export default function Home() {
     transition: 'all 0.2s ease',
     boxShadow: '0 2px 4px rgba(245, 101, 101, 0.3)',
   };
-
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '0.75rem',
@@ -424,11 +601,11 @@ export default function Home() {
                              style={fireworkItemStyle(selectedFirework?.id === firework.id)}
                              onClick={() => selectFirework(firework)}
                         >
-                          <div>
+                          <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#2d3748' }}>
                               🎆 Firework #{firework.id}
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
                               <span style={statusBadgeStyle(firework.isShareable)}>
                                 {firework.isShareable ? '🌐 Shareable' : '🔒 Private'}
                               </span>
@@ -437,22 +614,25 @@ export default function Home() {
                               </span>
                             </div>
                           </div>
-                          <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteFirework(firework.id);
-                              }}
-                              disabled={isDeleting}
-                              style={{
-                                ...dangerButtonStyle,
-                                padding: '0.5rem 1rem',
-                                fontSize: '0.75rem',
-                                opacity: isDeleting ? 0.6 : 1,
-                              }}
-                              title="Delete firework"
-                          >
-                            🗑️ Delete
-                          </button>
+
+                          <div>
+                            <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteFirework(firework.id);
+                                }}
+                                disabled={deletingIds.has(firework.id)}
+                                style={{
+                                  ...dangerButtonStyle,
+                                  padding: '0.5rem 1rem',
+                                  fontSize: '0.75rem',
+                                  opacity: deletingIds.has(firework.id) ? 0.6 : 1,
+                                }}
+                                title="Delete firework"
+                            >
+                              {deletingIds.has(firework.id) ? '⏳ Deleting...' : '🗑️ Delete'}
+                            </button>
+                          </div>
                         </div>
                     ))}
                   </div>
@@ -622,7 +802,7 @@ export default function Home() {
                           <strong style={{ color: '#2d3748' }}>🎨 Pixel Data:</strong> {selectedFirework.pixelData?.length || 0} pixels
                         </div>
                         <div>
-                          <strong style={{ color: '#2d3748' }}>🖼️ Original Image:</strong> {originalImageFiles.has(selectedFirework.id) ? '✅ Available' : '❌ Not available'}
+                          <strong style={{ color: '#2d3748' }}>🖼️ Print Image:</strong> {originalImageFiles.has(selectedFirework.id) ? '✅ Available (saved in localStorage)' : '❌ Not available'}
                         </div>
                       </div>
                     </div>
@@ -679,6 +859,9 @@ export default function Home() {
               <p style={{ marginBottom: '0.5rem' }}>
                 <strong>Safety:</strong> This prevents accidental access to deleted firework data and ensures QR code URLs remain unique.
               </p>
+              <p style={{ marginBottom: '0.5rem' }}>
+                <strong>Image Storage:</strong> Images are automatically saved to localStorage when creating fireworks and will persist across sessions. Old images (30+ days) are automatically cleaned up.
+              </p>
               <p>
                 <strong>Total Fireworks:</strong> {fireworks.length} active firework{fireworks.length !== 1 ? 's' : ''}
               </p>
@@ -698,7 +881,9 @@ export default function Home() {
           }
           
           input[type="file"]:focus,
-          input[type="file"]:hover {
+          input[type="file"]:hover,
+          input[type="number"]:focus,
+          input[type="number"]:hover {
             border-color: #667eea;
           }
         `}</style>

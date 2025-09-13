@@ -35,40 +35,43 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             const response = await fetch(qrImageUrl);
             if (!response.ok) {
                 console.error('Failed to fetch QR code image:', response.status);
+                if (onError) onError('Failed to fetch QR code image.');
                 return;
             }
 
-            const blob = await response.blob();
-            const img = document.createElement('img');
+            const imageBlob = await response.blob();
+            const imageUrl = URL.createObjectURL(imageBlob);
+            const img = new window.Image();
 
             img.onload = () => {
                 const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
                 const ctx = canvas.getContext('2d');
-
                 if (ctx) {
-                    canvas.width = size;
-                    canvas.height = size;
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fillRect(0, 0, size, size);
                     ctx.drawImage(img, 0, 0, size, size);
                     onDownload(canvas);
                 }
-                URL.revokeObjectURL(img.src);
+                URL.revokeObjectURL(imageUrl);
             };
 
-            img.onerror = () => {
-                console.error('Failed to load QR code image');
-                URL.revokeObjectURL(img.src);
-            };
-
-            img.src = URL.createObjectURL(blob);
-        } catch (error) {
-            console.error('Download failed:', error);
-            if (onError) {
-                onError('Failed to download QR code');
-            }
+            img.src = imageUrl;
+        } catch (err) {
+            console.error('Error in QR code download process:', err);
+            if (onError) onError('An error occurred during QR code generation.');
         }
     }, [qrImageUrl, size, onDownload, onError]);
+
+    const handleImageLoad = useCallback(() => {
+        setImageError(false);
+    }, []);
+
+    const handleImageError = useCallback(() => {
+        setImageError(true);
+        if (onError) {
+            onError('QRコード画像の読み込みに失敗しました。URLを確認してください。');
+        }
+    }, [onError]);
 
     // PDFで最大サイズ印刷用のレイアウトを生成（アクリルキーホルダー用）
     const handleGeneratePDF = useCallback(async () => {
@@ -276,7 +279,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print</title>
+    <title>Print Acrylic Keychain - Firework #${fireworkId}</title>
     <style>
         @page {
             size: A4 portrait;
@@ -298,7 +301,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px dashed black; /* ここで黒の破線を追加 */
+            border: 1px dashed black;
         }
         
         .qr-item {
@@ -329,9 +332,16 @@ const QRCodeComponent: FC<QRCodeProps> = ({
         }
         
         .placeholder {
-            display: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 8px;
+            color: #666;
+            text-align: center;
         }
-        
+
         @media print {
             body {
                 -webkit-print-color-adjust: exact;
@@ -348,7 +358,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
     <div class="keychain-item image-item">
         ${originalImageDataUrl ?
                 `<img src="${originalImageDataUrl}" alt="Firework Design" class="image-keychain" />` :
-                ''
+                `<div class="placeholder">Firework Design</div>`
             }
     </div>
     
@@ -406,16 +416,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
         } finally {
             setIsGeneratingPrint(false);
         }
-    }, [qrImageUrl, originalImageFile, onError]); // fireworkIdとurlを追加
-
-    const handleImageError = useCallback(() => {
-        console.error('QR Code image failed to load');
-        setImageError(true);
-    }, []);
-
-    const handleImageLoad = useCallback(() => {
-        setImageError(false);
-    }, []);
+    }, [qrImageUrl, fireworkId, originalImageFile, onError]);
 
     // Button styles
     const buttonBaseStyle: React.CSSProperties = {
@@ -530,7 +531,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                         opacity: isGeneratingPDF ? 0.6 : 1,
                         cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
                     }}
-                    title="Download PDF for acrylic keychain (30×45mm inserts)"
+                    title="Download PDF for acrylic keychain (45×32mm inserts)"
                 >
                     {isGeneratingPDF ? '⏳ Generating...' : '📄 Keychain PDF'}
                 </button>
