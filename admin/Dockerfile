@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 3000
 
 # next がコマンドとして見つからない場合に備えて、npx を使用
-CMD ["npx", "next", "dev"]
+CMD ["sh", "-c", "npm install && ./node_modules/.bin/next dev"]
