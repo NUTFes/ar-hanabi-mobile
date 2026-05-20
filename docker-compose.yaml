@@ -45,6 +45,10 @@ services:
       POSTGRES_HOST: ${POSTGRES_HOST}
       SWAGGER_URL: ${SWAGGER_URL}
       SWAGGER_STG_URL: ${SWAGGER_STG_URL}
+      STORAGE_ENDPOINT: http://seaweedfs:8333
+      STORAGE_BUCKET: fireworks
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY}
     ports:
       - "8080:8080"
     volumes:
@@ -55,6 +59,7 @@ services:
       - app_network
     depends_on:
       - db
+      - seaweedfs
 
   db:
     image: postgres:15
@@ -77,6 +82,17 @@ services:
       timeout: 5s
       retries: 5
 
+  seaweedfs:
+    image: chrislusf/seaweedfs
+    command: "server -s3"
+    ports:
+      - "8333:8333"
+    volumes:
+      - seaweedfs-data:/data
+    networks:
+      - app_network
+    restart: unless-stopped
+
   swagger-ui:
     image: swaggerapi/swagger-ui
     restart: unless-stopped
@@ -91,6 +107,7 @@ services:
 
 volumes:
   postgres-data:
+  seaweedfs-data:
 
 networks:
   app_network:
