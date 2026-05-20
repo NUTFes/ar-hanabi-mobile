@@ -1,29 +1,41 @@
 openapi: 3.0.3
-# APIの基本情報
 info:
-  title: "My AR Project API" # APIのタイトル
-  version: "1.0.0"          # APIのバージョン
+  title: "My AR Project API"
+  version: "1.0.0"
 servers:
   - url: http://localhost:8080
     description: ローカル開発用サーバ
   - url: http://app:8080
     description: Docker内部用サーバ
-# APIのエンドポイント（パス）を列挙するセクション
 paths:
   /fireworks:
     get:
-      summary: "花火の一覧を取得する"  # APIの簡単な説明
-      operationId: "GetFireworks"        # この操作の一意なID。コード生成時にメソッド名になる
-      responses:                     # レスポンスの定義
-        # '200' (成功) ステータスコードの時のレスポンス
+      summary: "花火の一覧を取得する"
+      operationId: "GetFireworks"
+      parameters:
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            description: "created_at の開始日 (YYYY-MM-DD、当日含む)"
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            description: "created_at の終了日 (YYYY-MM-DD、当日含む)"
+      responses:
         '200':
-          description: "花火の一覧"      # レスポンスの説明
-          content:                       # レスポンスボディの定義
-            application/json:            # メディアタイプがJSONの場合
-              schema:                    # ボディのデータ構造（スキーマ）
-                type: array              # データは配列
-                items:                   # 配列の各要素の型
-                  $ref: "#/components/schemas/FireworkResponse" # 下で定義するFireworkスキーマを参照
+          description: "花火の一覧"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FireworkResponse"
     post:
       summary: "花火を作成する"
       operationId: "CreateFirework"
@@ -32,9 +44,9 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/FireworkCreateRequest" # FireworkCreateRequestスキーマを参照
+              $ref: "#/components/schemas/FireworkCreateRequest"
       responses:
-        '201':                         # 作成成功時のステータスコード
+        '201':
           description: "花火が作成されました"
           content:
             application/json:
@@ -47,11 +59,19 @@ paths:
       parameters:
         - name: id
           in: path
-          required: true  # このパラメータは必須
+          required: true
           description: "花火のID"
           schema:
             type: integer
             format: int64
+        - name: resolution
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [low, mid, high]
+            default: low
+            description: "取得する解像度（現時点では無視。将来拡張用）"
       responses:
         '200':
           description: "花火の詳細"
@@ -75,7 +95,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FireworkUpdateRequest" # FireworkUpdateRequestスキーマを参照
+              $ref: "#/components/schemas/FireworkUpdateRequest"
       responses:
         '200':
           description: "花火が更新されました"
@@ -96,27 +116,41 @@ paths:
             format: int64
       responses:
         '204':
-          description: "花火が削除されました" # 削除成功時は204 No Contentを返す
-          content: {}  # レスポンスボディはなし 
-# 再利用可能なコンポーネントを定義するセクション
+          description: "花火が削除されました"
+          content: {}
+  /fireworks/{id}/image:
+    get:
+      summary: "元画像を取得する"
+      operationId: "GetFireworkImage"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '302':
+          description: "SeaweedFS URL へリダイレクト"
+        '404':
+          description: "元画像なし（旧レコードまたは存在しない ID）"
 components:
   schemas:
     FireworkCreateRequest:
       type: object
       description: "花火を作成するためのリクエストボディ"
-      required: # 必須フィールド
+      required:
         - isShareable
-        - image # pixelDataの元となる画像
+        - image
       properties:
         isShareable:
           type: boolean
           description: "花火が共有可能かどうか"
-          example: false 
+          example: false
         image:
           type: string
           format: binary
           description: "花火の元となる画像ファイル"
-          example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
     FireworkUpdateRequest:
       type: object
       description: "花火を更新するためのリクエストボディ"
@@ -127,11 +161,6 @@ components:
           type: boolean
           description: "花火が共有可能かどうか"
           example: true
-        # image:
-        #   type: string
-        #   format: binary
-        #   description: "花火の元となる画像ファイル"
-        #   example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
     FireworkResponse:
       type: object
       description: "花火のレスポンスデータ"
@@ -157,9 +186,10 @@ components:
           items:
             type: boolean
             description: "各ピクセルの状態（点灯/消灯）"
-            # type: integer
-            # format: int32
-            # example: 0
+        imageUrl:
+          type: string
+          nullable: true
+          description: "元画像の公開 URL。旧レコードは null"
         createdAt:
           type: string
           format: date-time
@@ -170,7 +200,3 @@ components:
           format: date-time
           description: "花火の更新日時"
           example: "2023-10-01T12:00:00Z"
-
-# tags:
-#   - name: "Fireworks" # タグの名前。APIの分類に使える
-#     description: "花火に関する操作" # タグの説明
