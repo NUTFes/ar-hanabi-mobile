@@ -30,6 +30,9 @@ type FireworkResponse struct {
 	// Id 花火のID
 	Id int64 `json:"id"`
 
+	// ImageUrl 元画像の公開 URL。旧レコードは null
+	ImageUrl *string `json:"imageUrl"`
+
 	// IsShareable 花火が共有可能かどうか
 	IsShareable bool `json:"isShareable"`
 
@@ -46,6 +49,17 @@ type FireworkUpdateRequest struct {
 	IsShareable bool `json:"isShareable"`
 }
 
+// GetFireworksParams クエリパラメータ
+type GetFireworksParams struct {
+	From *openapi_types.Date `form:"from,omitempty" json:"from,omitempty"`
+	To   *openapi_types.Date `form:"to,omitempty"   json:"to,omitempty"`
+}
+
+// GetFireworkByIdParams クエリパラメータ
+type GetFireworkByIdParams struct {
+	Resolution *string `form:"resolution,omitempty" json:"resolution,omitempty"`
+}
+
 // CreateFireworkMultipartRequestBody defines body for CreateFirework for multipart/form-data ContentType.
 type CreateFireworkMultipartRequestBody = FireworkCreateRequest
 
@@ -56,7 +70,7 @@ type UpdateFireworkJSONRequestBody = FireworkUpdateRequest
 type ServerInterface interface {
 	// 花火の一覧を取得する
 	// (GET /fireworks)
-	GetFireworks(ctx echo.Context) error
+	GetFireworks(ctx echo.Context, params GetFireworksParams) error
 	// 花火を作成する
 	// (POST /fireworks)
 	CreateFirework(ctx echo.Context) error
@@ -65,7 +79,10 @@ type ServerInterface interface {
 	DeleteFirework(ctx echo.Context, id int64) error
 	// IDで指定した花火を取得
 	// (GET /fireworks/{id})
-	GetFireworkById(ctx echo.Context, id int64) error
+	GetFireworkById(ctx echo.Context, id int64, params GetFireworkByIdParams) error
+	// 元画像を取得する
+	// (GET /fireworks/{id}/image)
+	GetFireworkImage(ctx echo.Context, id int64) error
 	// IDで指定した花火の共有設定を更新
 	// (PUT /fireworks/{id})
 	UpdateFirework(ctx echo.Context, id int64) error
@@ -79,9 +96,19 @@ type ServerInterfaceWrapper struct {
 // GetFireworks converts echo context to params.
 func (w *ServerInterfaceWrapper) GetFireworks(ctx echo.Context) error {
 	var err error
+	var params GetFireworksParams
 
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetFireworks(ctx)
+	err = runtime.BindQueryParameter("form", true, false, "from", ctx.QueryParams(), &params.From)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter from: %s", err))
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "to", ctx.QueryParams(), &params.To)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter to: %s", err))
+	}
+
+	err = w.Handler.GetFireworks(ctx, params)
 	return err
 }
 
@@ -121,8 +148,30 @@ func (w *ServerInterfaceWrapper) GetFireworkById(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
 	}
 
+	var params GetFireworkByIdParams
+	err = runtime.BindQueryParameter("form", true, false, "resolution", ctx.QueryParams(), &params.Resolution)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter resolution: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetFireworkById(ctx, id)
+	err = w.Handler.GetFireworkById(ctx, id, params)
+	return err
+}
+
+// GetFireworkImage converts echo context to params.
+func (w *ServerInterfaceWrapper) GetFireworkImage(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetFireworkImage(ctx, id)
 	return err
 }
 
@@ -173,6 +222,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/fireworks", wrapper.GetFireworks)
 	router.POST(baseURL+"/fireworks", wrapper.CreateFirework)
 	router.DELETE(baseURL+"/fireworks/:id", wrapper.DeleteFirework)
+	router.GET(baseURL+"/fireworks/:id/image", wrapper.GetFireworkImage)
 	router.GET(baseURL+"/fireworks/:id", wrapper.GetFireworkById)
 	router.PUT(baseURL+"/fireworks/:id", wrapper.UpdateFirework)
 
