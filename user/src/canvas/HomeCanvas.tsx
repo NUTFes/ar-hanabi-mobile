@@ -166,7 +166,7 @@ const CanvasSetup = forwardRef<CanvasSetupHandle>(( _, ref) => {
           width={window.innerWidth}    // ブルームの幅
           height={window.innerHeight}  // ブルームの高さ
           mipmapBlur={true}            // ミップマップを使用してブルームを適用
-          resolutionScale={1.5}        // 解像度を上げる（デフォルト1）
+          resolutionScale={window.devicePixelRatio > 2 ? 1.0 : 1.5}  // DPR > 2 はパフォーマンス優先
         />
       </EffectComposer>
     </>
