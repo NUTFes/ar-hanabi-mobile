@@ -55,7 +55,6 @@ services:
     volumes:
       - ./api:/app
     working_dir: /app
-    command: sh -c "go mod tidy && go run main.go"
     networks:
       - app_network
     depends_on:
