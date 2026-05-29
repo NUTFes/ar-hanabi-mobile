@@ -118,22 +118,6 @@ paths:
         '204':
           description: "花火が削除されました"
           content: {}
-  /fireworks/{id}/image:
-    get:
-      summary: "元画像を取得する"
-      operationId: "GetFireworkImage"
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '302':
-          description: "SeaweedFS URL へリダイレクト"
-        '404':
-          description: "元画像なし（旧レコードまたは存在しない ID）"
 components:
   schemas:
     FireworkCreateRequest:
@@ -167,7 +151,7 @@ components:
       required:
         - id
         - isShareable
-        - pixelData
+        - imageUrl
       properties:
         id:
           type: integer
@@ -179,13 +163,6 @@ components:
           description: "花火が共有可能かどうか"
           default: false
           example: true
-        pixelData:
-          type: array
-          description: "花火のピクセルデータ"
-          example: [true, false, true, false, true]
-          items:
-            type: boolean
-            description: "各ピクセルの状態（点灯/消灯）"
         imageUrl:
           type: string
           nullable: true
