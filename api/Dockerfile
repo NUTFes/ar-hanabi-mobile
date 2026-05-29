@@ -5,7 +5,7 @@ WORKDIR /app
 # 必要なパッケージをインストール
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y locales && \
+    apt-get install -y locales imagemagick libheif-dev && \
     locale-gen ja_JP.UTF-8 && \
     echo "export LANG=ja_JP.UTF-8" >> ~/.bashrc && \
     rm -rf /var/lib/apt/lists/*
