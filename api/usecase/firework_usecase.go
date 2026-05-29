@@ -1,10 +1,13 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"image/jpeg"
 	"net/http"
+	"os/exec"
 	"time"
 
 	"github.com/google/uuid"
@@ -97,9 +100,22 @@ func (uc *fireworkUsecase) CreateFirework(ctx context.Context, req openapi.Firew
 		return openapi.FireworkResponse{}, fmt.Errorf("failed to read image file: %w", err)
 	}
 
-	key := fmt.Sprintf("images/%s.jpg", uuid.New().String())
+	mimeType, ext := detectImageFormat(imageBytes)
+	if mimeType == "" {
+		return openapi.FireworkResponse{}, echo.NewHTTPError(http.StatusBadRequest, "unsupported image format: only jpeg, png, heic are accepted")
+	}
 
-	if err := uc.storage.Upload(ctx, key, imageBytes, "image/jpeg"); err != nil {
+	if mimeType == "image/heic" {
+		imageBytes, err = convertHEICToJPEG(imageBytes)
+		if err != nil {
+			return openapi.FireworkResponse{}, fmt.Errorf("failed to convert heic to jpeg: %w", err)
+		}
+		mimeType, ext = "image/jpeg", ".jpg"
+	}
+
+	key := fmt.Sprintf("images/%s%s", uuid.New().String(), ext)
+
+	if err := uc.storage.Upload(ctx, key, imageBytes, mimeType); err != nil {
 		return openapi.FireworkResponse{}, fmt.Errorf("failed to upload image: %w", err)
 	}
 
@@ -171,4 +187,54 @@ func (uc *fireworkUsecase) UpdateFirework(ctx context.Context, id int64, req ope
 		CreatedAt:   &fw.CreatedAt,
 		UpdatedAt:   &fw.UpdatedAt,
 	}, nil
+}
+
+// detectImageFormat は画像バイト列からMIMEタイプと拡張子を返す。
+// 非対応フォーマットの場合は空文字を返す。
+func detectImageFormat(data []byte) (mimeType, ext string) {
+	if isHEIC(data) {
+		return "image/heic", ".heic"
+	}
+	mime := http.DetectContentType(data)
+	switch mime {
+	case "image/jpeg":
+		return "image/jpeg", ".jpg"
+	case "image/png":
+		return "image/png", ".png"
+	default:
+		return "", ""
+	}
+}
+
+// isHEIC は HEIF/HEIC のマジックバイトを確認する。
+// ISOBMFF 構造: bytes[4:8] == "ftyp", bytes[8:12] == major brand
+func isHEIC(data []byte) bool {
+	if len(data) < 12 {
+		return false
+	}
+	if string(data[4:8]) != "ftyp" {
+		return false
+	}
+	brand := string(data[8:12])
+	switch brand {
+	case "heic", "heis", "hevc", "hevx", "mif1", "msf1":
+		return true
+	}
+	return false
+}
+
+// convertHEICToJPEG は ImageMagick を使って HEIC バイト列を JPEG に変換する。
+func convertHEICToJPEG(data []byte) ([]byte, error) {
+	cmd := exec.Command("convert", "heic:-", "jpeg:-")
+	cmd.Stdin = bytes.NewReader(data)
+	var out, errBuf bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errBuf
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("imagemagick convert failed: %w: %s", err, errBuf.String())
+	}
+	if _, err := jpeg.DecodeConfig(bytes.NewReader(out.Bytes())); err != nil {
+		return nil, fmt.Errorf("converted output is not valid jpeg: %w", err)
+	}
+	return out.Bytes(), nil
 }
