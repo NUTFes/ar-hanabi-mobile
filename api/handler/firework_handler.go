@@ -20,7 +20,6 @@ type fireworkHandler struct {
 type FireworkHandler interface {
 	GetFireworks(ctx echo.Context, params openapi.GetFireworksParams) error
 	GetFireworkById(ctx echo.Context, id int64, params openapi.GetFireworkByIdParams) error
-	GetFireworkImage(ctx echo.Context, id int64) error
 	CreateFirework(ctx echo.Context) error
 	DeleteFirework(ctx echo.Context, id int64) error
 	UpdateFirework(ctx echo.Context, id int64) error
@@ -55,14 +54,6 @@ func (h *fireworkHandler) GetFireworkById(ctx echo.Context, id int64, params ope
 	return ctx.JSON(http.StatusOK, firework)
 }
 
-func (h *fireworkHandler) GetFireworkImage(ctx echo.Context, id int64) error {
-	url, err := h.Usecase.GetFireworkImageURL(ctx.Request().Context(), id)
-	if err != nil {
-		return ctx.JSON(http.StatusNotFound, map[string]string{"error": "image not found"})
-	}
-	return ctx.Redirect(http.StatusFound, url)
-}
-
 func (h *fireworkHandler) CreateFirework(ctx echo.Context) error {
 	form, err := ctx.MultipartForm()
 	if err != nil {
@@ -81,7 +72,7 @@ func (h *fireworkHandler) CreateFirework(ctx echo.Context) error {
 	}
 
 	isShareable := false
-	if values, exists := form.Value["is_shareable"]; exists && len(values) > 0 {
+	if values, exists := form.Value["isShareable"]; exists && len(values) > 0 {
 		isShareable = values[0] == "true"
 	}
 

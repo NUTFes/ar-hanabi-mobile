@@ -24,7 +24,6 @@ type fireworkUsecase struct {
 type FireworkUsecase interface {
 	GetFireworks(ctx context.Context, from, to *time.Time) ([]openapi.FireworkResponse, error)
 	GetFireworkByID(ctx context.Context, id int64) (openapi.FireworkResponse, error)
-	GetFireworkImageURL(ctx context.Context, id int64) (string, error)
 	CreateFirework(ctx context.Context, req openapi.FireworkCreateRequest) (openapi.FireworkResponse, error)
 	DeleteFirework(ctx context.Context, id int64) error
 	UpdateFirework(ctx context.Context, id int64, req openapi.FireworkUpdateRequest) (openapi.FireworkResponse, error)
@@ -60,7 +59,6 @@ func (uc *fireworkUsecase) GetFireworks(ctx context.Context, from, to *time.Time
 		responses = append(responses, openapi.FireworkResponse{
 			Id:          int64(fw.ID),
 			IsShareable: fw.IsShareable,
-			PixelData:   []bool{},
 			ImageUrl:    imageUrl,
 			CreatedAt:   &fw.CreatedAt,
 			UpdatedAt:   &fw.UpdatedAt,
@@ -87,25 +85,10 @@ func (uc *fireworkUsecase) GetFireworkByID(ctx context.Context, id int64) (opena
 	return openapi.FireworkResponse{
 		Id:          int64(fw.ID),
 		IsShareable: fw.IsShareable,
-		PixelData:   []bool{},
 		ImageUrl:    imageUrl,
 		CreatedAt:   &fw.CreatedAt,
 		UpdatedAt:   &fw.UpdatedAt,
 	}, nil
-}
-
-func (uc *fireworkUsecase) GetFireworkImageURL(ctx context.Context, id int64) (string, error) {
-	var fw domain.Firework
-	if err := uc.db.WithContext(ctx).First(&fw, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", echo.NewHTTPError(http.StatusNotFound, "Firework not found")
-		}
-		return "", fmt.Errorf("failed to retrieve firework: %w", err)
-	}
-	if fw.ImagePath == nil {
-		return "", echo.NewHTTPError(http.StatusNotFound, "Image not found")
-	}
-	return uc.storage.PublicURL(*fw.ImagePath), nil
 }
 
 func (uc *fireworkUsecase) CreateFirework(ctx context.Context, req openapi.FireworkCreateRequest) (openapi.FireworkResponse, error) {
@@ -134,7 +117,6 @@ func (uc *fireworkUsecase) CreateFirework(ctx context.Context, req openapi.Firew
 	return openapi.FireworkResponse{
 		Id:          int64(firework.ID),
 		IsShareable: firework.IsShareable,
-		PixelData:   []bool{},
 		ImageUrl:    &imageUrl,
 		CreatedAt:   &firework.CreatedAt,
 		UpdatedAt:   &firework.UpdatedAt,
@@ -185,7 +167,6 @@ func (uc *fireworkUsecase) UpdateFirework(ctx context.Context, id int64, req ope
 	return openapi.FireworkResponse{
 		Id:          int64(fw.ID),
 		IsShareable: fw.IsShareable,
-		PixelData:   []bool{},
 		ImageUrl:    imageUrl,
 		CreatedAt:   &fw.CreatedAt,
 		UpdatedAt:   &fw.UpdatedAt,

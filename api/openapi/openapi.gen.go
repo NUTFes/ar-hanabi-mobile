@@ -36,9 +36,6 @@ type FireworkResponse struct {
 	// IsShareable 花火が共有可能かどうか
 	IsShareable bool `json:"isShareable"`
 
-	// PixelData 花火のピクセルデータ
-	PixelData []bool `json:"pixelData"`
-
 	// UpdatedAt 花火の更新日時
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
@@ -80,9 +77,6 @@ type ServerInterface interface {
 	// IDで指定した花火を取得
 	// (GET /fireworks/{id})
 	GetFireworkById(ctx echo.Context, id int64, params GetFireworkByIdParams) error
-	// 元画像を取得する
-	// (GET /fireworks/{id}/image)
-	GetFireworkImage(ctx echo.Context, id int64) error
 	// IDで指定した花火の共有設定を更新
 	// (PUT /fireworks/{id})
 	UpdateFirework(ctx echo.Context, id int64) error
@@ -159,22 +153,6 @@ func (w *ServerInterfaceWrapper) GetFireworkById(ctx echo.Context) error {
 	return err
 }
 
-// GetFireworkImage converts echo context to params.
-func (w *ServerInterfaceWrapper) GetFireworkImage(ctx echo.Context) error {
-	var err error
-	// ------------- Path parameter "id" -------------
-	var id int64
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
-	}
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetFireworkImage(ctx, id)
-	return err
-}
-
 // UpdateFirework converts echo context to params.
 func (w *ServerInterfaceWrapper) UpdateFirework(ctx echo.Context) error {
 	var err error
@@ -222,7 +200,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/fireworks", wrapper.GetFireworks)
 	router.POST(baseURL+"/fireworks", wrapper.CreateFirework)
 	router.DELETE(baseURL+"/fireworks/:id", wrapper.DeleteFirework)
-	router.GET(baseURL+"/fireworks/:id/image", wrapper.GetFireworkImage)
 	router.GET(baseURL+"/fireworks/:id", wrapper.GetFireworkById)
 	router.PUT(baseURL+"/fireworks/:id", wrapper.UpdateFirework)
 
