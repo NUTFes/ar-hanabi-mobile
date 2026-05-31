@@ -1,66 +1,65 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
 
 	"workshop-api/domain"
 	"workshop-api/handler"
+	"workshop-api/infra"
 	"workshop-api/openapi"
 	"workshop-api/usecase"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware" // middleware も v4 に変更
+	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func main() {
-	// 環境変数からデータベース接続情報を取得
 	dbUser := os.Getenv("POSTGRES_USER")
 	dbPassword := os.Getenv("POSTGRES_PASSWORD")
 	dbHost := os.Getenv("POSTGRES_HOST")
 	dbPort := os.Getenv("POSTGRES_PORT")
 	dbName := os.Getenv("POSTGRES_DB")
 
-	// DSNを構築
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName)
 
-	// DBに接続
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
 
-	// マイグレーションを実行
 	db.AutoMigrate(
 		&domain.Firework{},
 	)
 	fmt.Println("migrated")
 
-	// // 花火データを作成
-	// db.Create(&domain.Firework{
-	// 	IsShareable: true,
-	// 	PixelData:   []byte{1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, // bool スライスをバイト配列に変換
-	// 	// PixelData: []bool{true, false, true, false, true, false, true, false, true, false}, // bool スライスを使用
-	// })
-	// // idが1のFireworkを取得
-	// var firework domain.Firework
-	// if err := db.First(&firework, 1).Error; err != nil {
-	// 	fmt.Println("Error retrieving firework:", err)
-	// 	return
-	// }
-	// fmt.Printf("Retrieved Firework: %+v\n", firework)
+	storageEndpoint := os.Getenv("STORAGE_ENDPOINT")
+	storagePublicURL := os.Getenv("STORAGE_PUBLIC_URL")
+	storageBucket := os.Getenv("STORAGE_BUCKET")
+	storageAccess := os.Getenv("STORAGE_ACCESS_KEY")
+	storageSecret := os.Getenv("STORAGE_SECRET_KEY")
 
-	// Echoのインスタンスを作成
+	storageClient, err := infra.NewStorageClient(
+		context.Background(),
+		storageEndpoint,
+		storagePublicURL,
+		storageBucket,
+		storageAccess,
+		storageSecret,
+	)
+	if err != nil {
+		panic("failed to connect storage: " + err.Error())
+	}
+
 	e := echo.New()
 
-	// ロガーや、パニックからの復帰などのミドルウェアを設定
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	// 環境変数から管理者画面のURLを取得
 	swaggerUrl := os.Getenv("SWAGGER_URL")
 	swaggerStgUrl := os.Getenv("SWAGGER_STG_URL")
 	adminUrl := os.Getenv("ADMIN_URL")
@@ -70,7 +69,6 @@ func main() {
 	fmt.Println("Admin URL:", adminUrl)
 	fmt.Println("Admin Staging URL:", adminStgUrl)
 
-	// CORSの設定
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{
 			"http://localhost:8081",
@@ -87,25 +85,16 @@ func main() {
 			adminStgUrl,
 			swaggerUrl,
 			swaggerStgUrl,
-			// "https://41664d3b51b8.ngrok-free.app",
-			// "http://localhost:4173",
-			// "http://127.0.0.1:4173",
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		AllowCredentials: true, // クッキーを許可
+		AllowCredentials: true,
 	}))
 
-	// usecaseのインスタンスを作成
-	fireworkUsecase := usecase.NewFireworkUsecase(db)
-
-	// ハンドラのインスタンスを作成
+	fireworkUsecase := usecase.NewFireworkUsecase(db, storageClient)
 	fireworkHandler := handler.NewFireworkHandler(fireworkUsecase)
 
-	// oapi-codegenが生成したヘルパー関数を使ってルーティングを登録
-	// これにより、openapi.yamlに定義したエンドポイントが自動でマッピングされる
 	openapi.RegisterHandlers(e, fireworkHandler)
 
-	// 8080ポートでサーバーを起動
 	e.Start(":8080")
 }
