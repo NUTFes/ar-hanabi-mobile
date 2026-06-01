@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import QRCode from '@/components/QRCode';
+import DateFilter from '@/components/DateFilter';
 
 // Types
 interface Firework {
@@ -24,6 +25,7 @@ export default function Home() {
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
   const [originalImageFiles, setOriginalImageFiles] = useState<Map<number, File>>(new Map());
   const [nextId, setNextId] = useState<number>(1);
+const [selectedDate, setSelectedDate] = useState('');
 
   // API URL - ブラウザからは必ず localhost を使用
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -423,7 +425,7 @@ export default function Home() {
 
   const containerStyle: React.CSSProperties = {
     minHeight: '100vh',
-    backgroundColor: '#f0f4f8',
+    backgroundColor: '#6c859f',
     fontFamily: 'Arial, sans-serif',
   };
 
@@ -529,6 +531,17 @@ export default function Home() {
     fontWeight: '600',
   });
 
+  const filteredFireworks = fireworks.filter((firework) => {
+  if (!selectedDate) return true;
+  if (!firework.createdAt) return false;
+
+  const fireworkDate = new Date(
+    firework.createdAt
+  ).toLocaleDateString('sv-SE');
+
+  return fireworkDate === selectedDate;
+});
+
   return (
       <div style={containerStyle}>
         <header style={headerStyle}>
@@ -593,17 +606,23 @@ export default function Home() {
                   </div>
               ) : (
                   <div>
+                    <DateFilter
+                    selectedDate={selectedDate}
+                    onDateChange={setSelectedDate}
+                    totalCount={fireworks.length}
+                    filteredCount={filteredFireworks.length}
+                    />
                     <p style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.875rem' }}>
                       💡 Click on a firework to view its QR code
                     </p>
-                    {fireworks.map((firework) => (
+                    {filteredFireworks.map((firework) => (
                         <div key={firework.id}
                              style={fireworkItemStyle(selectedFirework?.id === firework.id)}
                              onClick={() => selectFirework(firework)}
                         >
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#2d3748' }}>
-                              🎆 Firework #{firework.id}
+                              🎆 Firework! #{firework.id}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
                               <span style={statusBadgeStyle(firework.isShareable)}>
@@ -612,6 +631,7 @@ export default function Home() {
                               <span style={{ fontSize: '0.75rem', color: '#718096' }}>
                                 📅 {firework.createdAt ? new Date(firework.createdAt).toLocaleDateString() : 'N/A'}
                               </span>
+
                             </div>
                           </div>
 
