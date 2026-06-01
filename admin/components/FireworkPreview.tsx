@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface FireworkPreviewProps {
   pixelData: boolean[];
   size?: number;

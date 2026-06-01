@@ -1,4 +1,3 @@
-import React from 'react';
 import FireworkPreview from './FireworkPreview';
 
 interface Firework {

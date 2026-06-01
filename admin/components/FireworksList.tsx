@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface Firework {
   id: number;
   isShareable: boolean;
