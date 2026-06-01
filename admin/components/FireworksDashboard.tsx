@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useCallback } from 'react';
 import FireworksErrorBanner from './FireworksErrorBanner';
 import FireworksList from './FireworksList';
