@@ -2,6 +2,7 @@
 
 import React, { FC, useRef, useCallback, useState } from "react";
 import Image from "next/image";
+import QRCodeButtons from "./QRCodeButtons";
 
 interface QRCodeProps {
     url: string;
@@ -499,43 +500,16 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                 )}
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                {onDownload && (
-                    <button
-                        onClick={handleDownload}
-                        style={primaryButtonStyle}
-                        title="Download QR Code as PNG"
-                    >
-                        💾 Download QR Code
-                    </button>
-                )}
-
-                <button
-                    onClick={handleGeneratePrintPage}
-                    disabled={isGeneratingPrint}
-                    style={{
-                        ...secondaryButtonStyle,
-                        opacity: isGeneratingPrint ? 0.6 : 1,
-                        cursor: isGeneratingPrint ? 'not-allowed' : 'pointer',
-                    }}
-                    title="Generate printable page for acrylic keychain (45×32mm inserts)"
-                >
-                    {isGeneratingPrint ? '⏳ Generating...' : '🔑 Keychain Print'}
-                </button>
-
-                <button
-                    onClick={handleGeneratePDF}
-                    disabled={isGeneratingPDF}
-                    style={{
-                        ...tertiaryButtonStyle,
-                        opacity: isGeneratingPDF ? 0.6 : 1,
-                        cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
-                    }}
-                    title="Download PDF for acrylic keychain (45×32mm inserts)"
-                >
-                    {isGeneratingPDF ? '⏳ Generating...' : '📄 Keychain PDF'}
-                </button>
-            </div>
+            <QRCodeButtons
+                onDownload={onDownload ? handleDownload : undefined}
+                onGeneratePrint={handleGeneratePrintPage}
+                onGeneratePDF={handleGeneratePDF}
+                isGeneratingPrint={isGeneratingPrint}
+                isGeneratingPDF={isGeneratingPDF}
+                primaryButtonStyle={primaryButtonStyle}
+                secondaryButtonStyle={secondaryButtonStyle}
+                tertiaryButtonStyle={tertiaryButtonStyle}
+            />
 
             <div style={{
                 fontSize: '0.75rem',
