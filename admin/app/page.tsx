@@ -425,7 +425,7 @@ const [selectedDate, setSelectedDate] = useState('');
 
   const containerStyle: React.CSSProperties = {
     minHeight: '100vh',
-    backgroundColor: '#6c859f',
+    backgroundColor: '#f0f4f8',
     fontFamily: 'Arial, sans-serif',
   };
 
