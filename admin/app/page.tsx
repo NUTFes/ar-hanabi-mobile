@@ -622,7 +622,7 @@ const [selectedDate, setSelectedDate] = useState('');
                         >
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#2d3748' }}>
-                              🎆 Firework! #{firework.id}
+                              🎆 Firework #{firework.id}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
                               <span style={statusBadgeStyle(firework.isShareable)}>
