@@ -25,7 +25,7 @@ export default function Home() {
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
   const [originalImageFiles, setOriginalImageFiles] = useState<Map<number, File>>(new Map());
   const [nextId, setNextId] = useState<number>(1);
-const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
 
   // API URL - ブラウザからは必ず localhost を使用
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -537,7 +537,7 @@ const [selectedDate, setSelectedDate] = useState('');
 
   const fireworkDate = new Date(
     firework.createdAt
-  ).toLocaleDateString('sv-SE');
+  ).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
 
   return fireworkDate === selectedDate;
 });
