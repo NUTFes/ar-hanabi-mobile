@@ -1,3 +1,5 @@
+import { ChangeEvent } from 'react';
+
 interface Firework {
   id: number;
   isShareable: boolean;
@@ -18,7 +20,7 @@ interface FireworksListProps {
   onSelectFirework: (id: number) => void;
   onToggleShareable: (id: number, current: boolean) => void;
   onDelete: (id: number) => void;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onShareableChange: (checked: boolean) => void;
   onCreate: () => void;
 }
