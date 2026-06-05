@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FC, useRef, useCallback, useState } from "react";
+import { FC, useRef, useCallback, useState } from "react";
 import Image from "next/image";
 import QRCodeButtons from "./QRCodeButtons";
 
