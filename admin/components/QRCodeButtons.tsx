@@ -1,14 +1,43 @@
 "use client";
 
+import { CSSProperties } from 'react';
+
+const buttonBaseStyle: CSSProperties = {
+  color: 'white',
+  padding: '0.75rem 1.5rem',
+  border: 'none',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  fontSize: '0.875rem',
+  fontWeight: '600',
+  transition: 'all 0.2s ease',
+  margin: '0.25rem',
+};
+
+const buttonStyles = {
+  primary: {
+    ...buttonBaseStyle,
+    background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
+    boxShadow: '0 2px 4px rgba(72, 187, 120, 0.3)',
+  },
+  secondary: {
+    ...buttonBaseStyle,
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)',
+  },
+  tertiary: {
+    ...buttonBaseStyle,
+    background: 'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)',
+    boxShadow: '0 2px 4px rgba(237, 137, 54, 0.3)',
+  },
+} as const;
+
 interface QRCodeButtonsProps {
   onDownload?: () => void;
   onGeneratePrint: () => void;
   onGeneratePDF: () => void;
   isGeneratingPrint: boolean;
   isGeneratingPDF: boolean;
-  primaryButtonStyle: React.CSSProperties;
-  secondaryButtonStyle: React.CSSProperties;
-  tertiaryButtonStyle: React.CSSProperties;
 }
 
 export default function QRCodeButtons({
@@ -17,9 +46,6 @@ export default function QRCodeButtons({
   onGeneratePDF,
   isGeneratingPrint,
   isGeneratingPDF,
-  primaryButtonStyle,
-  secondaryButtonStyle,
-  tertiaryButtonStyle,
 }: QRCodeButtonsProps) {
   return (
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>

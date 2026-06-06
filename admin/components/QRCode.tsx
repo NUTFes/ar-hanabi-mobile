@@ -419,37 +419,6 @@ const QRCodeComponent: FC<QRCodeProps> = ({
         }
     }, [qrImageUrl, fireworkId, originalImageFile, onError]);
 
-    // Button styles
-    const buttonBaseStyle: React.CSSProperties = {
-        color: 'white',
-        padding: '0.75rem 1.5rem',
-        border: 'none',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        fontSize: '0.875rem',
-        fontWeight: '600',
-        transition: 'all 0.2s ease',
-        margin: '0.25rem',
-    };
-
-    const primaryButtonStyle: React.CSSProperties = {
-        ...buttonBaseStyle,
-        background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
-        boxShadow: '0 2px 4px rgba(72, 187, 120, 0.3)',
-    };
-
-    const secondaryButtonStyle: React.CSSProperties = {
-        ...buttonBaseStyle,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)',
-    };
-
-    const tertiaryButtonStyle: React.CSSProperties = {
-        ...buttonBaseStyle,
-        background: 'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)',
-        boxShadow: '0 2px 4px rgba(237, 137, 54, 0.3)',
-    };
-
     return (
         <div style={{ textAlign: 'center' }}>
             <div
@@ -506,9 +475,6 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                 onGeneratePDF={handleGeneratePDF}
                 isGeneratingPrint={isGeneratingPrint}
                 isGeneratingPDF={isGeneratingPDF}
-                primaryButtonStyle={primaryButtonStyle}
-                secondaryButtonStyle={secondaryButtonStyle}
-                tertiaryButtonStyle={tertiaryButtonStyle}
             />
 
             <div style={{
