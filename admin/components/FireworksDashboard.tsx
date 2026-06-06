@@ -145,7 +145,6 @@ export default function FireworksDashboard() {
 
   // Delete a firework
   const deleteFirework = useCallback(async (id: number) => {
-    if (!confirm('Are you sure you want to delete this firework?')) return;
 
     setIsDeleting(true);
     try {

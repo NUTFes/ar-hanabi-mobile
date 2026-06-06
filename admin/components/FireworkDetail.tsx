@@ -93,7 +93,11 @@ export default function FireworkDetail({
                   </button>
 
                   <button
-                      onClick={() => onDelete(selectedFirework.id)}
+                      onClick={() => {
+                        if (window.confirm('本当に削除しますか？')) {
+                          onDelete(selectedFirework.id);
+                        }
+                      }}
                       disabled={isDeleting}
                       className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded disabled:opacity-50"
                   >
