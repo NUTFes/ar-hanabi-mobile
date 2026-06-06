@@ -1,12 +1,5 @@
 import { ChangeEvent } from 'react';
-
-interface Firework {
-  id: number;
-  isShareable: boolean;
-  pixelData: boolean[];
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { Firework } from '../types/Firework';
 
 interface FireworksListProps {
   fireworks: Firework[];

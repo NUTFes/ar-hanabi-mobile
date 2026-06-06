@@ -4,15 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import FireworksErrorBanner from './FireworksErrorBanner';
 import FireworksList from './FireworksList';
 import FireworkDetail from './FireworkDetail';
-
-// Types
-interface Firework {
-  id: number;
-  isShareable: boolean;
-  pixelData: boolean[];
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { Firework } from '../types/Firework';
 
 export default function FireworksDashboard() {
   // State

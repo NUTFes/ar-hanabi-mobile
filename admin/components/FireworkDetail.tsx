@@ -1,12 +1,5 @@
 import FireworkPreview from './FireworkPreview';
-
-interface Firework {
-  id: number;
-  isShareable: boolean;
-  pixelData: boolean[];
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { Firework } from '../types/Firework';
 
 interface FireworkDetailProps {
   selectedFirework: Firework | null;
