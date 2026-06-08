@@ -52,7 +52,7 @@ export default function QRCodeButtons({
         {onDownload && (
             <button
                 onClick={onDownload}
-                style={primaryButtonStyle}
+                style={buttonStyles.primary}
                 title="Download QR Code as PNG"
             >
               💾 Download QR Code
@@ -63,7 +63,7 @@ export default function QRCodeButtons({
             onClick={onGeneratePrint}
             disabled={isGeneratingPrint}
             style={{
-              ...secondaryButtonStyle,
+              ...buttonStyles.secondary,
               opacity: isGeneratingPrint ? 0.6 : 1,
               cursor: isGeneratingPrint ? 'not-allowed' : 'pointer',
             }}
@@ -76,7 +76,7 @@ export default function QRCodeButtons({
             onClick={onGeneratePDF}
             disabled={isGeneratingPDF}
             style={{
-              ...tertiaryButtonStyle,
+              ...buttonStyles.tertiary,
               opacity: isGeneratingPDF ? 0.6 : 1,
               cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
             }}
