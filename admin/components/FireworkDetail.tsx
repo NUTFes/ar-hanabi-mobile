@@ -26,7 +26,7 @@ export default function FireworkDetail({
                 <div className="mb-4">
                   <h3 className="text-lg font-medium mb-2">Preview</h3>
                   <div className="flex justify-center">
-                    <FireworkPreview pixelData={selectedFirework.pixelData} size={300} />
+                    <FireworkPreview imageUrl={selectedFirework.imageUrl} size={300} />
                   </div>
                 </div>
               </div>
@@ -65,17 +65,6 @@ export default function FireworkDetail({
                       {selectedFirework.updatedAt
                           ? new Date(selectedFirework.updatedAt).toLocaleString()
                           : 'N/A'}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 font-semibold">Pixel Count:</td>
-                    <td>{selectedFirework.pixelData?.length || 0}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 font-semibold">Active Pixels:</td>
-                    <td>
-                      {selectedFirework.pixelData?.filter(Boolean).length || 0}
-                      ({selectedFirework.pixelData?.length ? Math.round((selectedFirework.pixelData.filter(Boolean).length / selectedFirework.pixelData.length) * 100) : 0}%)
                     </td>
                   </tr>
                   </tbody>

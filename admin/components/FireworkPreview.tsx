@@ -1,16 +1,26 @@
+import Image from 'next/image';
+
 interface FireworkPreviewProps {
-  pixelData: boolean[];
+  imageUrl: string;
   size?: number;
 }
 
-export default function FireworkPreview({ pixelData, size = 100 }: FireworkPreviewProps) {
-  if (!pixelData || pixelData.length === 0) return null;
+export default function FireworkPreview({ imageUrl, size = 100 }: FireworkPreviewProps) {
+  if (!imageUrl) return null;
 
-  const dimension = Math.sqrt(pixelData.length);
-  if (dimension !== Math.floor(dimension)) {
-    console.error('Pixel data is not a perfect square');
-    return null;
-  }
+  return (
+    <div style={{ width: `${size}px`, height: `${size}px` }}>
+      <Image
+        src={imageUrl}
+        alt="Firework preview"
+        width={size}
+        height={size}
+        style={{ objectFit: 'contain' }}
+        unoptimized={true}
+      />
+    </div>
+  );
+}
 
   const pixelSize = size / dimension;
 
