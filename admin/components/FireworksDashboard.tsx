@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, ChangeEvent } from 'react';
 import FireworksErrorBanner from './FireworksErrorBanner';
 import FireworksList from './FireworksList';
 import FireworkDetail from './FireworkDetail';
@@ -175,7 +175,7 @@ export default function FireworksDashboard() {
   }, [API_URL, fetchFireworks, selectedFirework]);
 
   // Handle file selection
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
     }
