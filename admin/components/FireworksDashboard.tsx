@@ -77,7 +77,7 @@ export default function FireworksDashboard() {
     try {
       const formData = new FormData();
       formData.append('image', selectedFile);
-      formData.append('is_shareable', isShareable.toString());
+      formData.append('isShareable', isShareable.toString());
 
       const response = await fetch(`${API_URL}/fireworks`, {
         method: 'POST',
