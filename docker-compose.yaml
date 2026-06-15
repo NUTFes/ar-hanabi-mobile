@@ -60,8 +60,10 @@ services:
     networks:
       - app_network
     depends_on:
-      - db
-      - seaweedfs
+      db:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
 
   db:
     image: postgres:15
@@ -94,6 +96,12 @@ services:
     networks:
       - app_network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8333/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   swagger-ui:
     image: swaggerapi/swagger-ui
