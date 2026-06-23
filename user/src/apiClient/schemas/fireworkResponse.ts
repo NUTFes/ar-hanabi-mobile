@@ -6,6 +6,16 @@
  */
 
 /**
+ * 花火を作成するためのリクエストボディ
+ */
+export interface FireworkCreateRequest {
+	/** 花火が共有可能かどうか */
+	isShareable: boolean;
+	/** 花火の元となる画像ファイル */
+	image: Blob;
+}
+
+/**
  * 花火のレスポンスデータ
  */
 export interface FireworkResponse {
@@ -13,10 +23,21 @@ export interface FireworkResponse {
 	id: number;
 	/** 花火が共有可能かどうか */
 	isShareable: boolean;
-	/** 花火のピクセルデータ */
-	pixelData: boolean[];
+	/**
+	 * 元画像の公開URL。旧レコードは null
+	 * （旧フィールド pixelData: boolean[] は廃止）
+	 */
+	imageUrl: string | null;
 	/** 花火の作成日時 */
 	createdAt?: string;
 	/** 花火の更新日時 */
 	updatedAt?: string;
+}
+
+/**
+ * 花火を更新するためのリクエストボディ
+ */
+export interface FireworkUpdateRequest {
+	/** 花火が共有可能かどうか */
+	isShareable: boolean;
 }
