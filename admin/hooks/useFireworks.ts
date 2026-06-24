@@ -45,7 +45,6 @@ export function useFireworks() {
               savedAt: Date.now()
             };
             localStorage.setItem(getImageStorageKey(fireworkId), JSON.stringify(imageData));
-            console.log(`Saved image to localStorage for firework #${fireworkId}`);
             resolve();
           } catch (error) {
             console.error('Failed to save image to localStorage:', error);
@@ -82,7 +81,6 @@ export function useFireworks() {
         lastModified: imageData.lastModified || Date.now()
       });
 
-      console.log(`Loaded image from localStorage for firework #${fireworkId}: ${file.name}`);
       return file;
     } catch (error) {
       console.error(`Error loading image from localStorage for firework #${fireworkId}:`, error);
@@ -96,7 +94,6 @@ export function useFireworks() {
       return;
     }
 
-    console.log('Loading images from localStorage...');
     const imageMap = new Map<number, File>();
 
     await Promise.all(
@@ -111,13 +108,11 @@ export function useFireworks() {
     );
 
     setOriginalImageFiles(imageMap);
-    console.log(`Restored ${imageMap.size} images from localStorage`);
   }, [loadImageFromLocalStorage]);
 
   const removeImageFromLocalStorage = useCallback((fireworkId: number) => {
     try {
       localStorage.removeItem(getImageStorageKey(fireworkId));
-      console.log(`Removed image from localStorage for firework #${fireworkId}`);
     } catch (error) {
       console.error(`Failed to remove image from localStorage for firework #${fireworkId}:`, error);
     }
@@ -147,12 +142,7 @@ export function useFireworks() {
 
       keysToRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log(`Cleaned up old image: ${key}`);
       });
-
-      if (keysToRemove.length > 0) {
-        console.log(`Cleaned up ${keysToRemove.length} old images from localStorage`);
-      }
     } catch (error) {
       console.error('Error during localStorage cleanup:', error);
     }
@@ -167,11 +157,9 @@ export function useFireworks() {
         const data = await response.json();
         const latestId = data.latestId || 0;
         setNextId(latestId + 1);
-        console.log('Latest ID from database:', latestId, 'Next ID will be:', latestId + 1);
       } else {
         const maxId = fireworks.length > 0 ? Math.max(...fireworks.map(f => f.id)) : 0;
         setNextId(maxId + 1);
-        console.log('Calculated next ID from existing fireworks:', maxId + 1);
       }
     } catch (err) {
       console.warn('Failed to fetch latest ID, calculating from existing data:', err);
@@ -182,14 +170,11 @@ export function useFireworks() {
 
   const fetchFireworks = useCallback(async () => {
     setLoading(true);
-    console.log('Fetching fireworks from:', API_URL);
     try {
       const response = await fetch(`${API_URL}/fireworks`);
-      console.log('Response status:', response.status);
 
       if (!response.ok) {
         const errorMessage = `HTTP error ${response.status}`;
-        console.error('Fetch failed:', errorMessage);
         setError(`Failed to fetch fireworks: ${errorMessage}`);
         setFireworks([]);
         setOriginalImageFiles(new Map());
@@ -197,8 +182,6 @@ export function useFireworks() {
       }
 
       const data = await response.json();
-      console.log('Fetched data:', data);
-
       const fireworksData = Array.isArray(data) ? data : [];
       setFireworks(fireworksData);
 
@@ -207,10 +190,8 @@ export function useFireworks() {
       if (fireworksData.length > 0) {
         const maxId = Math.max(...fireworksData.map((f: Firework) => f.id));
         setNextId(maxId + 1);
-        console.log('Max existing ID:', maxId, 'Next ID will be:', maxId + 1);
       } else {
         setNextId(1);
-        console.log('No existing fireworks, next ID will be: 1');
       }
 
       setError(null);
@@ -225,7 +206,7 @@ export function useFireworks() {
     }
   }, [API_URL, loadAllImagesFromLocalStorage]);
 
-  const selectFirework = useCallback((firework: Firework) => {
+  const selectFirework = useCallback((firework: Firework | null) => {
     setSelectedFirework(firework);
   }, []);
 
@@ -271,13 +252,11 @@ export function useFireworks() {
       }
 
       const result = await response.json();
-      console.log('Created firework with ID:', result.id);
 
       if (result && result.id) {
         setOriginalImageFiles(prev => new Map(prev).set(result.id, selectedFile));
         try {
           await saveImageToLocalStorage(result.id, selectedFile);
-          console.log(`Saved original image to localStorage for firework #${result.id}`);
         } catch (storageError) {
           console.warn('Failed to save image to localStorage:', storageError);
         }
@@ -322,8 +301,6 @@ export function useFireworks() {
         return;
       }
 
-      console.log(`Successfully deleted firework #${fireworkId}`);
-
       await fetchFireworks();
 
       if (selectedFirework?.id === fireworkId) {
@@ -338,8 +315,6 @@ export function useFireworks() {
 
       removeImageFromLocalStorage(fireworkId);
       setError(null);
-
-      console.log(`Firework #${fireworkId} deleted. Next new firework will still use ID: ${nextId}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setError(`Failed to delete firework: ${errorMessage}`);
@@ -356,23 +331,12 @@ export function useFireworks() {
   // ---- effects ----
 
   useEffect(() => {
-    console.log('Component mounted, fetching fireworks...');
     fetchFireworks();
   }, [fetchFireworks]);
 
   useEffect(() => {
     cleanupOldImages();
   }, [cleanupOldImages]);
-
-  useEffect(() => {
-    console.log(`🏁 [COMPONENT] Fireworks Admin loaded at ${new Date().toISOString()}`);
-    console.log(`📊 [COMPONENT] Features: create, delete, QR generation, localStorage persistence`);
-  }, []);
-
-  useEffect(() => {
-    console.log('Fireworks state changed:', fireworks);
-    console.log('Next ID will be:', nextId);
-  }, [fireworks, nextId]);
 
   // ---- derived state ----
 
@@ -401,7 +365,6 @@ export function useFireworks() {
     setError,
     setSelectedDate,
     setIsShareable,
-    setSelectedFirework,
     // handlers
     selectFirework,
     handleFileChange,

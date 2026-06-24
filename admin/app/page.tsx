@@ -51,7 +51,7 @@ export default function Home() {
               originalImageFile={f.originalImageFiles.get(f.selectedFirework.id)}
               onDownload={f.handleQRDownload}
               onError={(error) => f.setError(error)}
-              onClose={() => f.setSelectedFirework(null)}
+              onClose={() => f.selectFirework(null)}
             />
           )}
         </div>
@@ -67,7 +67,7 @@ export default function Home() {
         />
       </main>
 
-      <style jsx>{`
+      <style jsx global>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
