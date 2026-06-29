@@ -55,7 +55,7 @@ export default function QRCodeButtons({
                 style={buttonStyles.primary}
                 title="Download QR Code as PNG"
             >
-              💾 Download QR Code
+              💾 QRコードをダウンロード
             </button>
         )}
 
@@ -69,7 +69,7 @@ export default function QRCodeButtons({
             }}
             title="Generate printable page for acrylic keychain (45×32mm inserts)"
         >
-          {isGeneratingPrint ? '⏳ Generating...' : '🔑 Keychain Print'}
+          {isGeneratingPrint ? '⏳ 印刷中...' : '🔑 キーホルダーの印刷'}
         </button>
 
         <button
@@ -82,7 +82,7 @@ export default function QRCodeButtons({
             }}
             title="Download PDF for acrylic keychain (45×32mm inserts)"
         >
-          {isGeneratingPDF ? '⏳ Generating...' : '📄 Keychain PDF'}
+          {isGeneratingPDF ? '⏳ 生成中...' : '📄 PDFの生成'}
         </button>
       </div>
   );

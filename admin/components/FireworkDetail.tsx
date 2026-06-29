@@ -77,8 +77,8 @@ export default function FireworkDetail({
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded disabled:opacity-50"
                   >
                     {isUpdating
-                        ? 'Updating...'
-                        : `Make ${selectedFirework.isShareable ? 'Private' : 'Shareable'}`}
+                        ? '更新中...'
+                        : `${selectedFirework.isShareable ? '非公開' : '公開'}にする`}
                   </button>
 
                   <button
@@ -90,14 +90,14 @@ export default function FireworkDetail({
                       disabled={isDeleting}
                       className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded disabled:opacity-50"
                   >
-                    {isDeleting ? 'Deleting...' : 'Delete Firework'}
+                    {isDeleting ? '削除中...' : '削除'}
                   </button>
                 </div>
               </div>
             </div>
         ) : (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-              <p>Select a firework from the list to view details</p>
+              <p>リストから花火を選んで詳細を表示</p>
             </div>
         )}
       </div>
