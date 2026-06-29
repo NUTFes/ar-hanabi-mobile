@@ -92,14 +92,14 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                             if (typeof result === 'string') {
                                 resolve(result);
                             } else {
-                                reject('Failed to read image file as string');
+                                reject('画像ファイルを文字列として読み込むことに失敗しました。');
                             }
                         };
-                        reader.onerror = () => reject('Failed to read image file');
+                        reader.onerror = () => reject('画像ファイルの読み込みに失敗しました');
                         reader.readAsDataURL(originalImageFile);
                     });
                 } catch (fileError) {
-                    console.warn('Failed to read original image file:', fileError);
+                    console.warn('元の画像ファイルの読み込みに失敗しました:', fileError);
                 }
             }
 
@@ -107,7 +107,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             const qrResponse = await fetch(qrImageUrl);
             if (!qrResponse.ok) {
                 if (onError) {
-                    onError('Failed to fetch QR code');
+                    onError('QRコードの取得に失敗しました');
                 }
                 return;
             }
@@ -119,10 +119,10 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                     if (typeof result === 'string') {
                         resolve(result);
                     } else {
-                        reject('Failed to read QR code blob as string');
+                        reject('QRコードのBLOBを文字列として読み取れませんでした。');
                     }
                 };
-                reader.onerror = () => reject('Failed to read QR code blob');
+                reader.onerror = () => reject('QRコードのBLOBを読み込めませんでした。');
                 reader.readAsDataURL(qrBlob);
             });
 
@@ -187,13 +187,13 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                     );
 
                 } catch (imgError) {
-                    console.warn('Failed to add image to PDF:', imgError);
+                    console.warn('PDFへの画像の追加に失敗しました：', imgError);
                     // 画像が追加できない場合はプレースホルダーを描画
                     pdf.setDrawColor(200, 200, 200);
                     pdf.rect(imageX + 5, imageY + 5, keychainWidth - 10, keychainHeight - 10);
                     pdf.setFontSize(8);
                     pdf.setDrawColor(0, 0, 0);
-                    pdf.text('Firework Design', imageX + keychainWidth/2, imageY + keychainHeight/2, { align: 'center' });
+                    pdf.text('花火のアイコン', imageX + keychainWidth/2, imageY + keychainHeight/2, { align: 'center' });
                 }
             } else {
                 // プレースホルダー
@@ -201,29 +201,29 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                 pdf.rect(imageX + 5, imageY + 5, keychainWidth - 10, keychainHeight - 10);
                 pdf.setFontSize(8);
                 pdf.setDrawColor(0, 0, 0);
-                pdf.text('Firework Design', imageX + keychainWidth/2, imageY + keychainHeight/2, { align: 'center' });
+                pdf.text('花火のアイコン', imageX + keychainWidth/2, imageY + keychainHeight/2, { align: 'center' });
             }
 
             // ラベルを追加
             pdf.setLineDashPattern([], 0);
             pdf.setDrawColor(0, 0, 0);
             pdf.setFontSize(8);
-            pdf.text('QR Code (裏面)', qrX, qrY + keychainHeight + 5);
-            pdf.text('Design (表面)', imageX, imageY + keychainHeight + 5);
+            pdf.text('QRコード (裏面)', qrX, qrY + keychainHeight + 5);
+            pdf.text('アイコン (表面)', imageX, imageY + keychainHeight + 5);
 
             // 情報セクション
             const infoY = qrY + keychainHeight + 20;
             pdf.setFontSize(10);
-            pdf.text('🔑 Acrylic Keychain Information', margin, infoY);
+            pdf.text('🔑 アクリルキーホルダー情報', margin, infoY);
 
             pdf.setFontSize(8);
-            pdf.text(`Firework ID: ${fireworkId}`, margin, infoY + 8);
-            pdf.text('Insert Size: 45mm × 32mm (each)', margin, infoY + 14);
-            pdf.text('Usage: Place QR code on back, design on front', margin, infoY + 20);
-            pdf.text('Print Size: A4 (210mm × 297mm)', margin, infoY + 26);
+            pdf.text(`花火ID: ${fireworkId}`, margin, infoY + 8);
+            pdf.text('挿入サイズ: 45mm × 32mm（各1枚）', margin, infoY + 14);
+            pdf.text('使い方: QRコードを裏面、アイコンを表面に配置してください', margin, infoY + 20);
+            pdf.text('印刷サイズ: A4（210mm × 297mm）', margin, infoY + 26);
 
             pdf.setFontSize(7);
-            pdf.text('QR Code URL:', margin, infoY + 38);
+            pdf.text('QRコードURL:', margin, infoY + 38);
 
             // URLを複数行に分割
             const urlLines = pdf.splitTextToSize(url, pageWidth - (margin * 2));
@@ -232,15 +232,15 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             // 切り取りガイド
             pdf.setFontSize(7);
             pdf.setTextColor(100, 100, 100);
-            pdf.text('Cut along the border lines for acrylic keychain inserts', margin, qrY + keychainHeight + 12);
+            pdf.text('枠線に沿って切り取って、アクリルキーホルダーに入れてください', margin, qrY + keychainHeight + 12);
 
             // PDFをダウンロード
             pdf.save(`acrylic-keychain-${fireworkId}.pdf`);
 
         } catch (error) {
-            console.error('PDF generation error:', error);
+            console.error('PDF生成エラー:', error);
             if (onError) {
-                onError('Failed to generate PDF');
+                onError('PDFの生成に失敗しました');
             }
         } finally {
             setIsGeneratingPDF(false);
@@ -262,14 +262,14 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                             if (typeof result === 'string') {
                                 resolve(result);
                             } else {
-                                reject('Failed to read image file as string');
+                                reject('画像ファイルを文字列として読み込むことに失敗しました。');
                             }
                         };
                         reader.onerror = () => reject('Failed to read image file');
                         reader.readAsDataURL(originalImageFile);
                     });
                 } catch (fileError) {
-                    console.warn('Failed to read original image file:', fileError);
+                    console.warn('元の画像ファイルの読み込みに失敗しました:', fileError);
                 }
             }
 
@@ -399,20 +399,20 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                 } else {
                     URL.revokeObjectURL(blobUrl);
                     if (onError) {
-                        onError('Pop-up blocked. Please check your browser settings and try again.');
+                        onError('ポップアップがブロックされました。ブラウザの設定を確認し、もう一度お試しください。');
                     }
                 }
             } catch (windowError) {
-                console.error('Failed to open print window:', windowError);
+                console.error('印刷ウィンドウを開けませんでした:', windowError);
                 if (onError) {
-                    onError('Failed to open print window. Please check your browser settings.');
+                    onError('印刷ウィンドウを開けませんでした。ブラウザの設定を確認してください。');
                 }
             }
 
         } catch (error) {
-            console.error('Print generation error:', error);
+            console.error('印刷生成エラー:', error);
             if (onError) {
-                onError('Failed to generate print page');
+                onError('印刷用ページの生成に失敗しました。');
             }
         } finally {
             setIsGeneratingPrint(false);

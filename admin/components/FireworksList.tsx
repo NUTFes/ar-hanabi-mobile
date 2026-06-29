@@ -36,14 +36,14 @@ export default function FireworksList({
 }: FireworksListProps) {
   return (
       <div className="md:col-span-1 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Fireworks</h2>
+        <h2 className="text-xl font-semibold mb-4">花火の一覧</h2>
 
         {loading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500"></div>
             </div>
         ) : fireworks.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No fireworks found</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">花火が見つからないよ、、、</p>
         ) : (
             <div className="overflow-y-auto max-h-[500px]">
               <table className="min-w-full">
@@ -114,7 +114,7 @@ export default function FireworksList({
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium mb-1">
-                Image
+                画像ファイルをアップしてね
               </label>
               <input
                   type="file"
@@ -123,7 +123,7 @@ export default function FireworksList({
                   className="w-full border dark:border-gray-600 rounded p-2 dark:bg-gray-700"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Select a square image (will be processed to 100x100)
+              正方形の画像を選択してください（100x100に処理されます）
               </p>
             </div>
 
@@ -135,7 +135,7 @@ export default function FireworksList({
                   onChange={(e) => onShareableChange(e.target.checked)}
                   className="mr-2"
               />
-              <label htmlFor="is-shareable">Shareable</label>
+              <label htmlFor="is-shareable">公開する</label>
             </div>
 
             <button
@@ -143,7 +143,7 @@ export default function FireworksList({
                 disabled={!selectedFile || isCreating}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded disabled:opacity-50"
             >
-              {isCreating ? 'Creating...' : 'Create Firework'}
+              {isCreating ? '作成中...' : '花火を作成'}
             </button>
           </div>
         </div>

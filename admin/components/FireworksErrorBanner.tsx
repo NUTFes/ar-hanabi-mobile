@@ -11,7 +11,7 @@ export default function FireworksErrorBanner({ error, onDismiss }: FireworksErro
           className="underline text-sm mt-1"
           onClick={onDismiss}
       >
-        Dismiss
+        このウィンドウを消す
       </button>
     </div>
   );
