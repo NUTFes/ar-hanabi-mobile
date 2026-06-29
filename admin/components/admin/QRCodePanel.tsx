@@ -22,11 +22,11 @@ export default function QRCodePanel({
   return (
     <div style={cardStyle}>
       <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#2d3748' }}>
-        📱 QR Code for Firework #{firework.id}
+        📱 花火のQRコード #{firework.id}
       </h2>
       <div style={{ textAlign: 'center' }}>
         <p style={{ marginBottom: '1.5rem', color: '#718096' }}>
-          📸 Scan this QR code to view the firework
+          📸 このQRコードを印刷
         </p>
 
         <QRCode
@@ -47,7 +47,7 @@ export default function QRCodePanel({
           wordBreak: 'break-all',
           border: '1px solid #e2e8f0',
         }}>
-          <strong style={{ color: '#2d3748' }}>🔗 Production URL:</strong>
+          <strong style={{ color: '#2d3748' }}>🔗 花火打ち上げ会場URL:</strong>
           <br />
           <span style={{ color: '#667eea', fontFamily: 'monospace' }}>
             {qrUrl}
@@ -61,7 +61,7 @@ export default function QRCodePanel({
             marginBottom: '0.75rem',
             fontWeight: '500',
           }}>
-            📊 Firework Details:
+            📊 花火の詳細:
           </div>
           <div style={{
             textAlign: 'left',
@@ -75,25 +75,25 @@ export default function QRCodePanel({
               <strong style={{ color: '#2d3748' }}>🆔 ID:</strong> {firework.id}
             </div>
             <div style={{ marginBottom: '0.5rem' }}>
-              <strong style={{ color: '#2d3748' }}>🌐 Shareable:</strong>
+              <strong style={{ color: '#2d3748' }}>🌐 公開設定:</strong>
               <span style={statusBadgeStyle(firework.isShareable)}>
                 {firework.isShareable ? 'Yes' : 'No'}
               </span>
             </div>
             <div style={{ marginBottom: '0.5rem' }}>
-              <strong style={{ color: '#2d3748' }}>📅 Created:</strong>{' '}
+              <strong style={{ color: '#2d3748' }}>📅 作成日:</strong>{' '}
               {firework.createdAt ? new Date(firework.createdAt).toLocaleString() : 'N/A'}
             </div>
             <div style={{ marginBottom: '0.5rem' }}>
-              <strong style={{ color: '#2d3748' }}>🔄 Updated:</strong>{' '}
+              <strong style={{ color: '#2d3748' }}>🔄 更新済み:</strong>{' '}
               {firework.updatedAt ? new Date(firework.updatedAt).toLocaleString() : 'N/A'}
             </div>
             <div style={{ marginBottom: '0.5rem' }}>
-              <strong style={{ color: '#2d3748' }}>🎨 Pixel Data:</strong>{' '}
+              <strong style={{ color: '#2d3748' }}>🎨 画素データ:</strong>{' '}
               {firework.pixelData?.length || 0} pixels
             </div>
             <div>
-              <strong style={{ color: '#2d3748' }}>🖼️ Print Image:</strong>{' '}
+              <strong style={{ color: '#2d3748' }}>🖼️ 画像の印刷:</strong>{' '}
               {originalImageFile
                 ? '✅ Available (saved in localStorage)'
                 : '❌ Not available'}
@@ -109,7 +109,7 @@ export default function QRCodePanel({
             padding: '0.75rem 1.5rem',
           }}
         >
-          ✖️ Close
+          ✖️ 閉じる
         </button>
       </div>
     </div>

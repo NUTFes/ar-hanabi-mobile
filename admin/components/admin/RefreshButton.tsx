@@ -19,7 +19,7 @@ export default function RefreshButton({ loading, onRefresh }: RefreshButtonProps
           cursor: loading ? 'not-allowed' : 'pointer',
         }}
       >
-        {loading ? '⏳ Loading...' : '🔄 Refresh Fireworks'}
+        {loading ? '⏳ 読み込み中...' : '🔄 花火情報の更新'}
       </button>
     </div>
   );

@@ -26,7 +26,7 @@ export default function AddFireworkForm({
       paddingTop: '2rem',
     }}>
       <h3 style={{ fontWeight: 'bold', marginBottom: '1rem', color: '#2d3748' }}>
-        ✨ Add New Firework
+        ✨ 花火を追加
       </h3>
 
       <div style={{
@@ -37,7 +37,7 @@ export default function AddFireworkForm({
         marginBottom: '1rem',
       }}>
         <p style={{ fontSize: '0.875rem', color: '#4a5568', margin: 0 }}>
-          🆔 Next Firework ID will be: <strong>#{nextId}</strong>
+          🆔 次の花火ID: <strong>#{nextId}</strong>
         </p>
       </div>
 
@@ -48,7 +48,7 @@ export default function AddFireworkForm({
           fontWeight: '600',
           color: '#4a5568',
         }}>
-          📁 Image File:
+          📁 画像ファイルをアップしてください:
         </label>
         <input
           type="file"
@@ -66,7 +66,7 @@ export default function AddFireworkForm({
             marginBottom: '1rem',
             fontWeight: '500',
           }}>
-            ✅ Selected: {selectedFile.name}
+            ✅ 選択中: {selectedFile.name}
           </p>
         )}
 
@@ -92,7 +92,7 @@ export default function AddFireworkForm({
             }}
           />
           <span style={{ fontWeight: '500', color: '#2d3748' }}>
-            🌐 Make this firework shareable
+            🌐 この花火を公開する
           </span>
         </label>
 
@@ -108,7 +108,7 @@ export default function AddFireworkForm({
             cursor: (!selectedFile || isCreating) ? 'not-allowed' : 'pointer',
           }}
         >
-          {isCreating ? '⏳ Creating...' : `🚀 Create Firework #${nextId}`}
+          {isCreating ? '⏳ 作成中...' : `🚀 花火を作成 #${nextId}`}
         </button>
       </div>
     </div>

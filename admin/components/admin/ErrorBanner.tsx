@@ -16,7 +16,7 @@ export default function ErrorBanner({ error, onDismiss }: ErrorBannerProps) {
       borderRadius: '8px',
       boxShadow: '0 2px 4px rgba(245, 101, 101, 0.1)',
     }}>
-      <p style={{ fontWeight: '600' }}>⚠️ Error: {error}</p>
+      <p style={{ fontWeight: '600' }}>⚠️ エラー！: {error}</p>
       <button
         onClick={onDismiss}
         style={{
@@ -26,7 +26,7 @@ export default function ErrorBanner({ error, onDismiss }: ErrorBannerProps) {
           fontSize: '0.75rem',
         }}
       >
-        Dismiss
+        このウィンドウを消す
       </button>
     </div>
   );

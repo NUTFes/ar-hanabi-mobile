@@ -23,7 +23,7 @@ export default function FireworkListItem({
     >
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#2d3748' }}>
-          🎆 Firework #{firework.id}
+          🎆 花火 #{firework.id}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
           <span style={statusBadgeStyle(firework.isShareable)}>
@@ -50,7 +50,7 @@ export default function FireworkListItem({
           }}
           title="Delete firework"
         >
-          {isDeleting ? '⏳ Deleting...' : '🗑️ Delete'}
+          {isDeleting ? '⏳ 削除しています...' : '🗑️ 削除'}
         </button>
       </div>
     </div>

@@ -14,23 +14,23 @@ export default function IdManagementInfo({ nextId, totalCount }: IdManagementInf
       border: '1px solid #dee2e6',
     }}>
       <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#2d3748' }}>
-        🔢 ID Management Information
+        🔢 ID管理情報
       </h3>
       <div style={{ fontSize: '0.875rem', color: '#6c757d', lineHeight: '1.6' }}>
         <p style={{ marginBottom: '0.5rem' }}>
-          <strong>Current Status:</strong> Next new firework will be assigned ID #{nextId}
+          <strong>現在の状況:</strong> 次に作成される花火ID: #{nextId}
         </p>
         <p style={{ marginBottom: '0.5rem' }}>
-          <strong>ID Policy:</strong> IDs are never reused. When a firework is deleted, its ID becomes permanently unavailable.
+          <strong>IDについて:</strong> IDは再利用されません。花火が削除されると、そのIDは二度と使えません。
         </p>
         <p style={{ marginBottom: '0.5rem' }}>
-          <strong>Safety:</strong> This prevents accidental access to deleted firework data and ensures QR code URLs remain unique.
+          <strong>安全性:</strong> ↑により、削除された花火のデータへの誤ったアクセスを防ぎ、QRコードのURLが一意であることを保証します。
         </p>
         <p style={{ marginBottom: '0.5rem' }}>
-          <strong>Image Storage:</strong> Images are automatically saved to localStorage when creating fireworks and will persist across sessions. Old images (30+ days) are automatically cleaned up.
+          <strong>画像ストレージ:</strong> 花火の作成時に画像は自動的にlocalStorageへ保存され、セッションをまたいで保持されます。古い画像（30日以上経過したもの）は自動的に削除されます。
         </p>
         <p>
-          <strong>Total Fireworks:</strong> {totalCount} active firework{totalCount !== 1 ? 's' : ''}
+          <strong>花火の総数:</strong> {totalCount} （有効な花火{totalCount !== 1 ? 'ら' : ''}）
         </p>
       </div>
     </div>

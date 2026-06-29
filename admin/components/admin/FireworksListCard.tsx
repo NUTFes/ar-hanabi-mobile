@@ -44,7 +44,7 @@ export default function FireworksListCard({
   return (
     <div style={cardStyle}>
       <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#2d3748' }}>
-        📋 Fireworks List
+        📋 花火の一覧
       </h2>
 
       {loading ? (
@@ -59,12 +59,12 @@ export default function FireworksListCard({
             animation: 'spin 1s linear infinite',
             marginBottom: '1rem',
           }}></div>
-          <p style={{ color: '#718096' }}>Loading fireworks...</p>
+          <p style={{ color: '#718096' }}>花火を読み込み中...</p>
         </div>
       ) : !fireworks || fireworks.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#718096' }}>
-          <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>🎭 No fireworks found</p>
-          <p>Create your first firework below!</p>
+          <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>🎭 花火が見つかりません！</p>
+          <p>「花火を追加」から最初の花火を作成してください</p>
         </div>
       ) : (
         <div>
@@ -75,7 +75,7 @@ export default function FireworksListCard({
             filteredCount={filteredFireworks.length}
           />
           <p style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.875rem' }}>
-            💡 Click on a firework to view its QR code
+            💡 花火をクリックすると、QRコードが表示されます
           </p>
           {filteredFireworks.map((firework) => (
             <FireworkListItem
