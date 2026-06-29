@@ -546,10 +546,10 @@ export default function Home() {
       <div style={containerStyle}>
         <header style={headerStyle}>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', margin: 0 }}>
-            🎆 花火を管理する部屋だよ
+            🎆 AR花火 管理者ページ
           </h1>
           <p style={{ margin: '0.5rem 0 0 0', opacity: 0.9 }}>
-            花火のQRコードを管理・生成できるよ
+            花火のQRコードを管理・生成できます
           </p>
         </header>
 
@@ -601,8 +601,8 @@ export default function Home() {
                   </div>
               ) : !fireworks || fireworks.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '3rem', color: '#718096' }}>
-                    <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>🎭 花火が見つからないよ！</p>
-                    <p>「花火を追加」から最初の花火を作ってみよう</p>
+                    <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>🎭 花火が見つかりません！</p>
+                    <p>「花火を追加」から最初の花火を作成してください</p>
                   </div>
               ) : (
                   <div>
@@ -613,7 +613,7 @@ export default function Home() {
                     filteredCount={filteredFireworks.length}
                     />
                     <p style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.875rem' }}>
-                      💡 花火をクリックすると、QRコードが表示されるよ
+                      💡 花火をクリックすると、QRコードが表示されます
                     </p>
                     {filteredFireworks.map((firework) => (
                         <div key={firework.id}
@@ -684,7 +684,7 @@ export default function Home() {
                     fontWeight: '600',
                     color: '#4a5568'
                   }}>
-                    📁 画像ファイルをアップしてね:
+                    📁 画像ファイルをアップしてください:
                   </label>
                   <input
                       type="file"
@@ -874,13 +874,13 @@ export default function Home() {
                 <strong>現在の状況:</strong> 次に作成される花火ID: #{nextId}
               </p>
               <p style={{ marginBottom: '0.5rem' }}>
-                <strong>IDについて:</strong> IDは再利用されないよ。花火が削除されると、そのIDは二度と使えないよ。
+                <strong>IDについて:</strong> IDは再利用されません。花火が削除されると、そのIDは二度と使えません。
               </p>
               <p style={{ marginBottom: '0.5rem' }}>
-                <strong>安全性:</strong> ↑により、削除された花火のデータへの誤ったアクセスを防ぎ、QRコードのURLが一意であることを保証するよ。
+                <strong>安全性:</strong> ↑により、削除された花火のデータへの誤ったアクセスを防ぎ、QRコードのURLが一意であることを保証します。
               </p>
               <p style={{ marginBottom: '0.5rem' }}>
-                <strong>画像ストレージ:</strong> 花火の作成時に画像は自動的にlocalStorageへ保存され、セッションをまたいで保持されるよ。古い画像（30日以上経過したもの）は自動的に削除されるよ。
+                <strong>画像ストレージ:</strong> 花火の作成時に画像は自動的にlocalStorageへ保存され、セッションをまたいで保持されます。古い画像（30日以上経過したもの）は自動的に削除されます。
               </p>
               <p>
                 <strong>花火の総数:</strong> {fireworks.length} （有効な花火{fireworks.length !== 1 ? 'ら' : ''}）

@@ -230,7 +230,7 @@ export default function FireworksDashboard() {
         </main>
 
         <footer className="bg-gray-100 dark:bg-gray-800 p-4 mt-8 text-center text-gray-600 dark:text-gray-400">
-          <p>花火を管理する部屋だよ &copy; {new Date().getFullYear()}</p>
+          <p>AR花火 管理者ページ &copy; {new Date().getFullYear()}</p>
         </footer>
       </div>
   );

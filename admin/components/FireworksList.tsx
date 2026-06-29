@@ -123,7 +123,7 @@ export default function FireworksList({
                   className="w-full border dark:border-gray-600 rounded p-2 dark:bg-gray-700"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              正方形の画像を選択してね（100x100に処理されるからね）
+              正方形の画像を選択してください（100x100に処理されます）
               </p>
             </div>
 
