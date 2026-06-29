@@ -546,10 +546,10 @@ export default function Home() {
       <div style={containerStyle}>
         <header style={headerStyle}>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', margin: 0 }}>
-            🎆 Fireworks Admin Dashboard
+            🎆 花火を管理する部屋だよ
           </h1>
           <p style={{ margin: '0.5rem 0 0 0', opacity: 0.9 }}>
-            Manage and generate QR codes for firework displays
+            花火のQRコードを管理・生成できるよ
           </p>
         </header>
 
@@ -564,7 +564,7 @@ export default function Home() {
                 borderRadius: '8px',
                 boxShadow: '0 2px 4px rgba(245, 101, 101, 0.1)',
               }}>
-                <p style={{ fontWeight: '600' }}>⚠️ Error: {error}</p>
+                <p style={{ fontWeight: '600' }}>⚠️ エラー！: {error}</p>
                 <button
                     onClick={() => setError(null)}
                     style={{
@@ -574,7 +574,7 @@ export default function Home() {
                       fontSize: '0.75rem',
                     }}
                 >
-                  Dismiss
+                  このウィンドウを消す
                 </button>
               </div>
           )}
@@ -583,7 +583,7 @@ export default function Home() {
             {/* Fireworks List */}
             <div style={cardStyle}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#2d3748' }}>
-                📋 Fireworks List
+                📋 花火の一覧
               </h2>
               {loading ? (
                   <div style={{ textAlign: 'center', padding: '3rem' }}>
@@ -597,12 +597,12 @@ export default function Home() {
                       animation: 'spin 1s linear infinite',
                       marginBottom: '1rem'
                     }}></div>
-                    <p style={{ color: '#718096' }}>Loading fireworks...</p>
+                    <p style={{ color: '#718096' }}>花火を読み込み中...</p>
                   </div>
               ) : !fireworks || fireworks.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '3rem', color: '#718096' }}>
-                    <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>🎭 No fireworks found</p>
-                    <p>Create your first firework below!</p>
+                    <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>🎭 花火が見つからないよ！</p>
+                    <p>「花火を追加」から最初の花火を作ってみよう</p>
                   </div>
               ) : (
                   <div>
@@ -613,7 +613,7 @@ export default function Home() {
                     filteredCount={filteredFireworks.length}
                     />
                     <p style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.875rem' }}>
-                      💡 Click on a firework to view its QR code
+                      💡 花火をクリックすると、QRコードが表示されるよ
                     </p>
                     {filteredFireworks.map((firework) => (
                         <div key={firework.id}
@@ -622,7 +622,7 @@ export default function Home() {
                         >
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#2d3748' }}>
-                              🎆 Firework #{firework.id}
+                              🎆 花火 #{firework.id}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
                               <span style={statusBadgeStyle(firework.isShareable)}>
@@ -650,7 +650,7 @@ export default function Home() {
                                 }}
                                 title="Delete firework"
                             >
-                              {deletingIds.has(firework.id) ? '⏳ Deleting...' : '🗑️ Delete'}
+                              {deletingIds.has(firework.id) ? '⏳ 削除しています...' : '🗑️ 削除'}
                             </button>
                           </div>
                         </div>
@@ -664,7 +664,7 @@ export default function Home() {
                 paddingTop: '2rem'
               }}>
                 <h3 style={{ fontWeight: 'bold', marginBottom: '1rem', color: '#2d3748' }}>
-                  ✨ Add New Firework
+                  ✨ 花火を追加
                 </h3>
                 <div style={{
                   backgroundColor: '#f7fafc',
@@ -674,7 +674,7 @@ export default function Home() {
                   marginBottom: '1rem'
                 }}>
                   <p style={{ fontSize: '0.875rem', color: '#4a5568', margin: 0 }}>
-                    🆔 Next Firework ID will be: <strong>#{nextId}</strong>
+                    🆔 次の花火ID: <strong>#{nextId}</strong>
                   </p>
                 </div>
                 <div>
@@ -684,7 +684,7 @@ export default function Home() {
                     fontWeight: '600',
                     color: '#4a5568'
                   }}>
-                    📁 Image File:
+                    📁 画像ファイルをアップしてね:
                   </label>
                   <input
                       type="file"
@@ -702,7 +702,7 @@ export default function Home() {
                         marginBottom: '1rem',
                         fontWeight: '500'
                       }}>
-                        ✅ Selected: {selectedFile.name}
+                        ✅ 選択中: {selectedFile.name}
                       </p>
                   )}
 
@@ -728,7 +728,7 @@ export default function Home() {
                         }}
                     />
                     <span style={{ fontWeight: '500', color: '#2d3748' }}>
-                      🌐 Make this firework shareable
+                      🌐 この花火を公開する
                     </span>
                   </label>
 
@@ -744,7 +744,7 @@ export default function Home() {
                         cursor: (!selectedFile || isCreating) ? 'not-allowed' : 'pointer',
                       }}
                   >
-                    {isCreating ? '⏳ Creating...' : `🚀 Create Firework #${nextId}`}
+                    {isCreating ? '⏳ 作成中...' : `🚀 花火を作成 #${nextId}`}
                   </button>
                 </div>
               </div>
@@ -754,11 +754,11 @@ export default function Home() {
             {selectedFirework && (
                 <div style={cardStyle}>
                   <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#2d3748' }}>
-                    📱 QR Code for Firework #{selectedFirework.id}
+                    📱 花火のQRコード #{selectedFirework.id}
                   </h2>
                   <div style={{ textAlign: 'center' }}>
                     <p style={{ marginBottom: '1.5rem', color: '#718096' }}>
-                      📸 Scan this QR code to view the firework
+                      📸 このQRコードを印刷
                     </p>
 
                     <QRCode
@@ -779,7 +779,7 @@ export default function Home() {
                       wordBreak: 'break-all',
                       border: '1px solid #e2e8f0'
                     }}>
-                      <strong style={{ color: '#2d3748' }}>🔗 Production URL:</strong>
+                      <strong style={{ color: '#2d3748' }}>🔗 花火打ち上げ会場URL:</strong>
                       <br />
                       <span style={{ color: '#667eea', fontFamily: 'monospace' }}>
                         {generateQRUrl(selectedFirework)}
@@ -793,7 +793,7 @@ export default function Home() {
                         marginBottom: '0.75rem',
                         fontWeight: '500'
                       }}>
-                        📊 Firework Details:
+                        📊 花火の詳細:
                       </div>
                       <div style={{
                         textAlign: 'left',
@@ -807,22 +807,22 @@ export default function Home() {
                           <strong style={{ color: '#2d3748' }}>🆔 ID:</strong> {selectedFirework.id}
                         </div>
                         <div style={{ marginBottom: '0.5rem' }}>
-                          <strong style={{ color: '#2d3748' }}>🌐 Shareable:</strong>
+                          <strong style={{ color: '#2d3748' }}>🌐 公開設定:</strong>
                           <span style={statusBadgeStyle(selectedFirework.isShareable)}>
                             {selectedFirework.isShareable ? 'Yes' : 'No'}
                           </span>
                         </div>
                         <div style={{ marginBottom: '0.5rem' }}>
-                          <strong style={{ color: '#2d3748' }}>📅 Created:</strong> {selectedFirework.createdAt ? new Date(selectedFirework.createdAt).toLocaleString() : 'N/A'}
+                          <strong style={{ color: '#2d3748' }}>📅 作成日:</strong> {selectedFirework.createdAt ? new Date(selectedFirework.createdAt).toLocaleString() : 'N/A'}
                         </div>
                         <div style={{ marginBottom: '0.5rem' }}>
-                          <strong style={{ color: '#2d3748' }}>🔄 Updated:</strong> {selectedFirework.updatedAt ? new Date(selectedFirework.updatedAt).toLocaleString() : 'N/A'}
+                          <strong style={{ color: '#2d3748' }}>🔄 更新済み:</strong> {selectedFirework.updatedAt ? new Date(selectedFirework.updatedAt).toLocaleString() : 'N/A'}
                         </div>
                         <div style={{ marginBottom: '0.5rem' }}>
-                          <strong style={{ color: '#2d3748' }}>🎨 Pixel Data:</strong> {selectedFirework.pixelData?.length || 0} pixels
+                          <strong style={{ color: '#2d3748' }}>🎨 画素データ:</strong> {selectedFirework.pixelData?.length || 0} pixels
                         </div>
                         <div>
-                          <strong style={{ color: '#2d3748' }}>🖼️ Print Image:</strong> {originalImageFiles.has(selectedFirework.id) ? '✅ Available (saved in localStorage)' : '❌ Not available'}
+                          <strong style={{ color: '#2d3748' }}>🖼️ 画像の印刷:</strong> {originalImageFiles.has(selectedFirework.id) ? '✅ Available (saved in localStorage)' : '❌ Not available'}
                         </div>
                       </div>
                     </div>
@@ -835,7 +835,7 @@ export default function Home() {
                           padding: '0.75rem 1.5rem',
                         }}
                     >
-                      ✖️ Close
+                      ✖️ 閉じる
                     </button>
                   </div>
                 </div>
@@ -855,7 +855,7 @@ export default function Home() {
                   cursor: loading ? 'not-allowed' : 'pointer',
                 }}
             >
-              {loading ? '⏳ Loading...' : '🔄 Refresh Fireworks'}
+              {loading ? '⏳ 読み込み中...' : '🔄 花火情報の更新'}
             </button>
           </div>
 
@@ -867,23 +867,23 @@ export default function Home() {
             border: '1px solid #dee2e6'
           }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#2d3748' }}>
-              🔢 ID Management Information
+              🔢 ID管理情報
             </h3>
             <div style={{ fontSize: '0.875rem', color: '#6c757d', lineHeight: '1.6' }}>
               <p style={{ marginBottom: '0.5rem' }}>
-                <strong>Current Status:</strong> Next new firework will be assigned ID #{nextId}
+                <strong>現在の状況:</strong> 次に作成される花火ID: #{nextId}
               </p>
               <p style={{ marginBottom: '0.5rem' }}>
-                <strong>ID Policy:</strong> IDs are never reused. When a firework is deleted, its ID becomes permanently unavailable.
+                <strong>IDについて:</strong> IDは再利用されないよ。花火が削除されると、そのIDは二度と使えないよ。
               </p>
               <p style={{ marginBottom: '0.5rem' }}>
-                <strong>Safety:</strong> This prevents accidental access to deleted firework data and ensures QR code URLs remain unique.
+                <strong>安全性:</strong> ↑により、削除された花火のデータへの誤ったアクセスを防ぎ、QRコードのURLが一意であることを保証するよ。
               </p>
               <p style={{ marginBottom: '0.5rem' }}>
-                <strong>Image Storage:</strong> Images are automatically saved to localStorage when creating fireworks and will persist across sessions. Old images (30+ days) are automatically cleaned up.
+                <strong>画像ストレージ:</strong> 花火の作成時に画像は自動的にlocalStorageへ保存され、セッションをまたいで保持されるよ。古い画像（30日以上経過したもの）は自動的に削除されるよ。
               </p>
               <p>
-                <strong>Total Fireworks:</strong> {fireworks.length} active firework{fireworks.length !== 1 ? 's' : ''}
+                <strong>花火の総数:</strong> {fireworks.length} （有効な花火{fireworks.length !== 1 ? 'ら' : ''}）
               </p>
             </div>
           </div>

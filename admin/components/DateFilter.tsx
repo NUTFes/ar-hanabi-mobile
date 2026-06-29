@@ -33,7 +33,7 @@ export default function DateFilter({
           fontWeight: 'bold',
         }}
       >
-        📅 Filter Fireworks
+        📅 花火を日付で絞り込み
       </h3>
 
       <input
@@ -63,7 +63,7 @@ export default function DateFilter({
             color: '#718096',
           }}
         >
-          Showing {filteredCount} / {totalCount} fireworks
+          絞り込まれた花火の数: {filteredCount} / {totalCount}
         </span>
 
         {selectedDate && (
@@ -79,7 +79,7 @@ export default function DateFilter({
               fontWeight: 'bold',
             }}
           >
-            Clear
+            リセット
           </button>
         )}
       </div>
