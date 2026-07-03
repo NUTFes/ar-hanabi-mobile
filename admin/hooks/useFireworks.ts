@@ -326,7 +326,7 @@ export function useFireworks() {
         return newSet;
       });
     }
-  }, [API_URL, fetchFireworks, selectedFirework, nextId, removeImageFromLocalStorage]);
+  }, [API_URL, fetchFireworks, selectedFirework, removeImageFromLocalStorage]);
 
   // ---- effects ----
 
