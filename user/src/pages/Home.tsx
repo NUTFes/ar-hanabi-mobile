@@ -9,6 +9,7 @@ import {
 import type { IllustrationFireworksType } from '../types/illustrationFireworksType';
 import type { ColorParticleData } from '../types/illustrationFireworksType';
 import { imageUrlToParticles } from '../utils/imageToParticles';
+import { toSameOriginUrl } from '../config/apiConfig';
 import { useGetFireworkById } from '../apiClient/fireworks/myARProjectAPI';
 import ScanModal from '../components/common/ScanModal';
 import type { HomeCanvasHandle } from '../canvas/HomeCanvas';
@@ -86,7 +87,7 @@ export default function Home() {
 
     // 画像 → カラーパーティクル変換
     setIsConverting(true);
-    imageUrlToParticles(data.imageUrl, {
+    imageUrlToParticles(toSameOriginUrl(data.imageUrl), {
       resolution, /* DEBUG - 固定値に戻す場合は resolution を 64 などに変更 */
       whiteThreshold: 200,
       saturationThreshold: 30,

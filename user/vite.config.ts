@@ -32,10 +32,24 @@ export default defineConfig({
     },
     allowedHosts: [
       '.local',
-      'localhost', 
-      // '16dbd1de098c.ngrok-free.app',
+      'localhost',
+      '.ngrok-free.app', // スマホ実機検証用（ngrok無料枠のランダムサブドメインを許可）
+      '.ngrok-free.dev', // スマホ実機検証用（ngrok無料枠の新ドメインサフィックス）
       'hanabi.nutfes.net',
       'hanabi-stg.nutfes.net',
-    ]
+    ],
+    proxy: {
+      // スマホ実機検証用: ngrokでフロントのみ公開した際、同一オリジンでSeaweedFS(画像)へ中継する
+      // ('/fireworks'より先に定義し、'/fireworks/images'を優先的にマッチさせる)
+      '/fireworks/images': {
+        target: 'http://seaweedfs:8333',
+        changeOrigin: true,
+      },
+      // スマホ実機検証用: ngrokでフロントのみ公開した際、同一オリジンでAPIへ中継する
+      '/fireworks': {
+        target: 'http://app:8080',
+        changeOrigin: true,
+      },
+    },
   }
 })
