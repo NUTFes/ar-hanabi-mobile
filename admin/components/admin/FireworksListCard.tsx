@@ -81,6 +81,7 @@ export default function FireworksListCard({
             <FireworkListItem
               key={firework.id}
               firework={firework}
+              imageUrl={firework.imageUrl}
               isSelected={selectedFirework?.id === firework.id}
               isDeleting={deletingIds.has(firework.id)}
               onSelect={onSelect}
