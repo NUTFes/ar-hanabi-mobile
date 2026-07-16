@@ -1,8 +1,10 @@
 import { dangerButtonStyle, fireworkItemStyle, statusBadgeStyle } from '@/styles/adminStyles';
 import type { Firework } from '@/hooks/useFireworks';
+import ImagePreview from "./ImagePreview"
 
 interface FireworkListItemProps {
   firework: Firework;
+  imageUrl: string | null;
   isSelected: boolean;
   isDeleting: boolean;
   onSelect: (firework: Firework) => void;
@@ -11,6 +13,7 @@ interface FireworkListItemProps {
 
 export default function FireworkListItem({
   firework,
+  imageUrl,
   isSelected,
   isDeleting,
   onSelect,
@@ -21,7 +24,7 @@ export default function FireworkListItem({
       style={fireworkItemStyle(isSelected)}
       onClick={() => onSelect(firework)}
     >
-      <div style={{ flex: 1 }}>
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
         <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#2d3748' }}>
           🎆 花火 #{firework.id}
         </div>
@@ -33,8 +36,12 @@ export default function FireworkListItem({
             📅 {firework.createdAt ? new Date(firework.createdAt).toLocaleDateString() : 'N/A'}
           </span>
         </div>
+        <ImagePreview 
+      imageUrl={imageUrl}
+      size={50}
+      />
       </div>
-
+      
       <div>
         <button
           onClick={(e) => {

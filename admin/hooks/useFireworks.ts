@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 export interface Firework {
   id: number;
   isShareable: boolean;
+  imageUrl: string | null;
   pixelData: boolean[];
   createdAt?: string;
   updatedAt?: string;
