@@ -73,6 +73,9 @@ export default function ImageCropModal({
       }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="画像を編集"
         style={{
           backgroundColor: 'white',
           borderRadius: '12px',
