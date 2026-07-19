@@ -4,7 +4,7 @@ function createImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
-    image.addEventListener('error', (error) => reject(error));
+    image.addEventListener('error', () => reject(new Error('Failed to load image')));
     image.src = src;
   });
 }
@@ -28,11 +28,14 @@ export async function getCroppedImg(
 ): Promise<File> {
   const image = await createImage(imageSrc);
 
+  const naturalWidth = image.naturalWidth;
+  const naturalHeight = image.naturalHeight;
+
   const rotRad = toRadians(rotation);
   const sin = Math.abs(Math.sin(rotRad));
   const cos = Math.abs(Math.cos(rotRad));
-  const boundingWidth = image.width * cos + image.height * sin;
-  const boundingHeight = image.width * sin + image.height * cos;
+  const boundingWidth = Math.ceil(naturalWidth * cos + naturalHeight * sin);
+  const boundingHeight = Math.ceil(naturalWidth * sin + naturalHeight * cos);
 
   const rotateCanvas = document.createElement('canvas');
   rotateCanvas.width = boundingWidth;
@@ -42,9 +45,11 @@ export async function getCroppedImg(
     throw new Error('Failed to get 2D canvas context');
   }
 
+  rotateCtx.fillStyle = '#ffffff';
+  rotateCtx.fillRect(0, 0, boundingWidth, boundingHeight);
   rotateCtx.translate(boundingWidth / 2, boundingHeight / 2);
   rotateCtx.rotate(rotRad);
-  rotateCtx.drawImage(image, -image.width / 2, -image.height / 2);
+  rotateCtx.drawImage(image, -naturalWidth / 2, -naturalHeight / 2);
 
   const outputCanvas = document.createElement('canvas');
   outputCanvas.width = croppedAreaPixels.width;
@@ -54,6 +59,8 @@ export async function getCroppedImg(
     throw new Error('Failed to get 2D canvas context');
   }
 
+  outputCtx.fillStyle = '#ffffff';
+  outputCtx.fillRect(0, 0, croppedAreaPixels.width, croppedAreaPixels.height);
   outputCtx.drawImage(
     rotateCanvas,
     croppedAreaPixels.x,

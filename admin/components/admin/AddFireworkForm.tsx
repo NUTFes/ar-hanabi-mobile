@@ -39,6 +39,10 @@ export default function AddFireworkForm({
       setEditorMeta({ fileName: file.name, mimeType: file.type });
       setIsEditorOpen(true);
     };
+    reader.onerror = () => {
+      console.error('Failed to read image file:', reader.error);
+      window.alert('⚠️ 画像ファイルの読み込みに失敗しました。別のファイルでお試しください。');
+    };
     reader.readAsDataURL(file);
   };
 

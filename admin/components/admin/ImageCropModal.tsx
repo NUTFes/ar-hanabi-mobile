@@ -30,6 +30,7 @@ export default function ImageCropModal({
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleCropComplete = useCallback((_croppedArea: Area, areaPixels: Area) => {
     setCroppedAreaPixels(areaPixels);
@@ -46,11 +47,13 @@ export default function ImageCropModal({
   const handleConfirm = useCallback(async () => {
     if (!croppedAreaPixels) return;
     setIsProcessing(true);
+    setErrorMessage(null);
     try {
       const file = await getCroppedImg(imageSrc, croppedAreaPixels, rotation, fileName, mimeType);
       onConfirm(file);
     } catch (error) {
       console.error('Failed to crop image:', error);
+      setErrorMessage('⚠️ 画像の処理に失敗しました。もう一度お試しください。');
     } finally {
       setIsProcessing(false);
     }
@@ -99,6 +102,8 @@ export default function ImageCropModal({
             zoom={zoom}
             rotation={rotation}
             aspect={1}
+            minZoom={0.1}
+            maxZoom={3}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onRotationChange={setRotation}
@@ -107,12 +112,13 @@ export default function ImageCropModal({
         </div>
 
         <div style={{ marginTop: '1rem' }}>
-          <label style={{ display: 'block', fontSize: '0.875rem', color: '#4a5568', marginBottom: '0.25rem' }}>
+          <label htmlFor="crop-zoom" style={{ display: 'block', fontSize: '0.875rem', color: '#4a5568', marginBottom: '0.25rem' }}>
             🔍 ズーム
           </label>
           <input
+            id="crop-zoom"
             type="range"
-            min={1}
+            min={0.1}
             max={3}
             step={0.01}
             value={zoom}
@@ -122,10 +128,11 @@ export default function ImageCropModal({
         </div>
 
         <div style={{ marginTop: '1rem' }}>
-          <label style={{ display: 'block', fontSize: '0.875rem', color: '#4a5568', marginBottom: '0.25rem' }}>
+          <label htmlFor="crop-rotation" style={{ display: 'block', fontSize: '0.875rem', color: '#4a5568', marginBottom: '0.25rem' }}>
             🔄 回転
           </label>
           <input
+            id="crop-rotation"
             type="range"
             min={0}
             max={360}
@@ -151,6 +158,12 @@ export default function ImageCropModal({
             </button>
           </div>
         </div>
+
+        {errorMessage && (
+          <p style={{ color: '#e53e3e', fontSize: '0.875rem', marginTop: '1rem', fontWeight: '500' }}>
+            {errorMessage}
+          </p>
+        )}
 
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem' }}>
           <button
