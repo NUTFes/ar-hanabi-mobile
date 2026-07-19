@@ -18,7 +18,7 @@ interface FireworksListCardProps {
   onDateChange: (date: string) => void;
   onSelect: (firework: Firework) => void;
   onDelete: (id: number) => void;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onEditedFile: (file: File) => void;
   onShareableChange: (checked: boolean) => void;
   onCreate: () => void;
 }
@@ -37,7 +37,7 @@ export default function FireworksListCard({
   onDateChange,
   onSelect,
   onDelete,
-  onFileChange,
+  onEditedFile,
   onShareableChange,
   onCreate,
 }: FireworksListCardProps) {
@@ -96,7 +96,7 @@ export default function FireworksListCard({
         selectedFile={selectedFile}
         isShareable={isShareable}
         isCreating={isCreating}
-        onFileChange={onFileChange}
+        onEditedFile={onEditedFile}
         onShareableChange={onShareableChange}
         onCreate={onCreate}
       />
