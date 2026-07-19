@@ -43,7 +43,21 @@ export default function ScanModal ({ isOpen, onScan, closeModal }: CommonModalPr
       <QrScanner 
         onScan={onScan} // QRコードスキャン時のコールバックを設定
       />
-			<button onClick={closeModal} className="modal-close" type="button">
+			<button
+				onClick={closeModal}
+				type="button"
+				style={{
+					marginTop: '12px',
+					padding: '8px 20px',
+					fontSize: '14px',
+					fontWeight: 600,
+					borderRadius: '10px',
+					border: 'none',
+					backgroundColor: '#f0b810',
+					color: '#1a1a1a',
+					cursor: 'pointer',
+				}}
+			>
 				閉じる
 			</button>
 		</Modal>

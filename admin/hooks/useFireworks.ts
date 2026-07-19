@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 export interface Firework {
   id: number;
   isShareable: boolean;
+  imageUrl: string | null;
   pixelData: boolean[];
   createdAt?: string;
   updatedAt?: string;
@@ -276,12 +277,6 @@ export function useFireworks() {
     }
   }, [selectedFile, isShareable, API_URL, fetchFireworks, fetchLatestId, saveImageToLocalStorage]);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
-    }
-  }, []);
-
   const deleteFirework = useCallback(async (fireworkId: number) => {
     if (!confirm(`Are you sure you want to delete firework #${fireworkId}? This action cannot be undone.`)) {
       return;
@@ -365,9 +360,9 @@ export function useFireworks() {
     setError,
     setSelectedDate,
     setIsShareable,
+    setSelectedFile,
     // handlers
     selectFirework,
-    handleFileChange,
     createFirework,
     deleteFirework,
     fetchFireworks,

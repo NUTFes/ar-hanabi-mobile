@@ -1,13 +1,22 @@
-import { primaryButtonStyle, inputStyle } from '@/styles/adminStyles';
+'use client';
+
+import { useState } from 'react';
+import { primaryButtonStyle, secondaryButtonStyle, inputStyle } from '@/styles/adminStyles';
+import ImageCropModal from './ImageCropModal';
 
 interface AddFireworkFormProps {
   nextId: number;
   selectedFile: File | null;
   isShareable: boolean;
   isCreating: boolean;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onEditedFile: (file: File) => void;
   onShareableChange: (checked: boolean) => void;
   onCreate: () => void;
+}
+
+interface EditorMeta {
+  fileName: string;
+  mimeType: string;
 }
 
 export default function AddFireworkForm({
@@ -15,10 +24,50 @@ export default function AddFireworkForm({
   selectedFile,
   isShareable,
   isCreating,
-  onFileChange,
+  onEditedFile,
   onShareableChange,
   onCreate,
 }: AddFireworkFormProps) {
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null);
+  const [editorMeta, setEditorMeta] = useState<EditorMeta | null>(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+
+  const openEditorForFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRawImageSrc(reader.result as string);
+      setEditorMeta({ fileName: file.name, mimeType: file.type });
+      setIsEditorOpen(true);
+    };
+    reader.onerror = () => {
+      console.error('Failed to read image file:', reader.error);
+      window.alert('⚠️ 画像ファイルの読み込みに失敗しました。別のファイルでお試しください。');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      openEditorForFile(e.target.files[0]);
+    }
+    e.target.value = '';
+  };
+
+  const handleEditAgain = () => {
+    if (selectedFile) {
+      openEditorForFile(selectedFile);
+    }
+  };
+
+  const handleEditorConfirm = (file: File) => {
+    onEditedFile(file);
+    setIsEditorOpen(false);
+  };
+
+  const handleEditorCancel = () => {
+    setIsEditorOpen(false);
+  };
+
   return (
     <div style={{
       marginTop: '2rem',
@@ -53,21 +102,30 @@ export default function AddFireworkForm({
         <input
           type="file"
           accept="image/*"
-          onChange={onFileChange}
+          onChange={handleFileInputChange}
           style={{
             ...inputStyle,
             borderColor: selectedFile ? '#48bb78' : '#e2e8f0',
           }}
         />
         {selectedFile && (
-          <p style={{
-            fontSize: '0.875rem',
-            color: '#48bb78',
-            marginBottom: '1rem',
-            fontWeight: '500',
-          }}>
-            ✅ 選択中: {selectedFile.name}
-          </p>
+          <div style={{ marginBottom: '1rem' }}>
+            <p style={{
+              fontSize: '0.875rem',
+              color: '#48bb78',
+              marginBottom: '0.5rem',
+              fontWeight: '500',
+            }}>
+              ✅ 選択中: {selectedFile.name}
+            </p>
+            <button
+              type="button"
+              onClick={handleEditAgain}
+              style={{ ...secondaryButtonStyle, width: '100%' }}
+            >
+              ✂️ 画像を編集
+            </button>
+          </div>
         )}
 
         <label style={{
@@ -111,6 +169,16 @@ export default function AddFireworkForm({
           {isCreating ? '⏳ 作成中...' : `🚀 花火を作成 #${nextId}`}
         </button>
       </div>
+
+      {isEditorOpen && rawImageSrc && editorMeta && (
+        <ImageCropModal
+          imageSrc={rawImageSrc}
+          fileName={editorMeta.fileName}
+          mimeType={editorMeta.mimeType}
+          onConfirm={handleEditorConfirm}
+          onCancel={handleEditorCancel}
+        />
+      )}
     </div>
   );
 }

@@ -39,7 +39,7 @@ export default function Home() {
             onDateChange={f.setSelectedDate}
             onSelect={f.selectFirework}
             onDelete={f.deleteFirework}
-            onFileChange={f.handleFileChange}
+            onEditedFile={f.setSelectedFile}
             onShareableChange={f.setIsShareable}
             onCreate={f.createFirework}
           />

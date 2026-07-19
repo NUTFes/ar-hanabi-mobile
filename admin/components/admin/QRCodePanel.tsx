@@ -33,6 +33,7 @@ export default function QRCodePanel({
           url={qrUrl}
           size={200}
           fireworkId={firework.id}
+          imageUrl={firework.imageUrl}
           originalImageFile={originalImageFile}
           onDownload={onDownload}
           onError={onError}

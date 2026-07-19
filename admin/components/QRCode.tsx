@@ -3,12 +3,14 @@
 import { FC, useRef, useCallback, useState } from "react";
 import Image from "next/image";
 import QRCodeButtons from "./QRCodeButtons";
+import ImagePreview from "./admin/ImagePreview";
 
 interface QRCodeProps {
     url: string;
     size?: number;
     fireworkId: number;
     originalImageFile?: File;
+    imageUrl: string | null;
     onDownload?: (canvas: HTMLCanvasElement) => void;
     onError?: (error: string) => void;
 }
@@ -17,6 +19,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                                               url,
                                               size = 250,
                                               fireworkId,
+                                              imageUrl,
                                               originalImageFile,
                                               onDownload,
                                               onError
@@ -421,52 +424,57 @@ const QRCodeComponent: FC<QRCodeProps> = ({
 
     return (
         <div style={{ textAlign: 'center' }}>
-            <div
-                style={{
-                    display: 'inline-block',
-                    padding: '1.5rem',
-                    backgroundColor: 'white',
-                    border: '2px solid #e2e8f0',
-                    borderRadius: '12px',
-                    marginBottom: '1.5rem',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.07)',
-                }}
-            >
-                {imageError ? (
-                    <div
-                        style={{
-                            width: size,
-                            height: size,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: '#fed7d7',
-                            color: '#c53030',
-                            border: '2px solid #feb2b2',
-                            borderRadius: '8px',
-                            fontSize: '0.875rem',
-                            fontWeight: '600'
-                        }}
-                    >
-                        ❌ QR Code failed to load
-                    </div>
-                ) : (
-                    <Image
-                        ref={imgRef}
-                        src={qrImageUrl}
-                        alt="QR Code"
-                        width={size}
-                        height={size}
-                        style={{
-                            display: 'block',
-                            borderRadius: '8px',
-                            border: '1px solid #e2e8f0'
-                        }}
-                        onError={handleImageError}
-                        onLoad={handleImageLoad}
-                        unoptimized={true}
+            <div className="saa" style={{ display: 'flex', justifyContent: 'center'}}>
+                <ImagePreview 
+                    imageUrl={imageUrl}
                     />
-                )}
+                <div
+                    style={{
+                        display: 'inline-block',
+                        padding: '1.5rem',
+                        backgroundColor: 'white',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '12px',
+                        marginBottom: '1.5rem',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.07)',
+                    }}
+                >
+                    {imageError ? (
+                        <div
+                            style={{
+                                width: size,
+                                height: size,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: '#fed7d7',
+                                color: '#c53030',
+                                border: '2px solid #feb2b2',
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                                fontWeight: '600'
+                            }}
+                        >
+                            ❌ QR Code failed to load
+                        </div>
+                    ) : (
+                        <Image
+                            ref={imgRef}
+                            src={qrImageUrl}
+                            alt="QR Code"
+                            width={size}
+                            height={size}
+                            style={{
+                                display: 'block',
+                                borderRadius: '8px',
+                                border: '1px solid #e2e8f0'
+                            }}
+                            onError={handleImageError}
+                            onLoad={handleImageLoad}
+                            unoptimized={true}
+                        />
+                    )}
+                </div>
             </div>
 
             <QRCodeButtons
