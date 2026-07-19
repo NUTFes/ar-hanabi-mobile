@@ -73,7 +73,8 @@ export async function getCroppedImg(
     croppedAreaPixels.height
   );
 
-  const outputType = mimeType || 'image/png';
+  const supportedTypes = new Set(['image/png', 'image/jpeg', 'image/webp']);
+  const outputType = supportedTypes.has(mimeType) ? mimeType : 'image/png';
 
   return new Promise((resolve, reject) => {
     outputCanvas.toBlob((blob) => {
