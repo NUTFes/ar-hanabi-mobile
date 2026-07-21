@@ -1,13 +1,16 @@
 "use client";
 
-import React, { FC, useRef, useCallback, useState } from "react";
+import { FC, useRef, useCallback, useState } from "react";
 import Image from "next/image";
+import QRCodeButtons from "./QRCodeButtons";
+import ImagePreview from "./admin/ImagePreview";
 
 interface QRCodeProps {
     url: string;
     size?: number;
     fireworkId: number;
     originalImageFile?: File;
+    imageUrl: string | null;
     onDownload?: (canvas: HTMLCanvasElement) => void;
     onError?: (error: string) => void;
 }
@@ -16,6 +19,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                                               url,
                                               size = 250,
                                               fireworkId,
+                                              imageUrl,
                                               originalImageFile,
                                               onDownload,
                                               onError
@@ -35,40 +39,43 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             const response = await fetch(qrImageUrl);
             if (!response.ok) {
                 console.error('Failed to fetch QR code image:', response.status);
+                if (onError) onError('Failed to fetch QR code image.');
                 return;
             }
 
-            const blob = await response.blob();
-            const img = document.createElement('img');
+            const imageBlob = await response.blob();
+            const imageUrl = URL.createObjectURL(imageBlob);
+            const img = new window.Image();
 
             img.onload = () => {
                 const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
                 const ctx = canvas.getContext('2d');
-
                 if (ctx) {
-                    canvas.width = size;
-                    canvas.height = size;
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fillRect(0, 0, size, size);
                     ctx.drawImage(img, 0, 0, size, size);
                     onDownload(canvas);
                 }
-                URL.revokeObjectURL(img.src);
+                URL.revokeObjectURL(imageUrl);
             };
 
-            img.onerror = () => {
-                console.error('Failed to load QR code image');
-                URL.revokeObjectURL(img.src);
-            };
-
-            img.src = URL.createObjectURL(blob);
-        } catch (error) {
-            console.error('Download failed:', error);
-            if (onError) {
-                onError('Failed to download QR code');
-            }
+            img.src = imageUrl;
+        } catch (err) {
+            console.error('Error in QR code download process:', err);
+            if (onError) onError('An error occurred during QR code generation.');
         }
     }, [qrImageUrl, size, onDownload, onError]);
+
+    const handleImageLoad = useCallback(() => {
+        setImageError(false);
+    }, []);
+
+    const handleImageError = useCallback(() => {
+        setImageError(true);
+        if (onError) {
+            onError('QRコード画像の読み込みに失敗しました。URLを確認してください。');
+        }
+    }, [onError]);
 
     // PDFで最大サイズ印刷用のレイアウトを生成（アクリルキーホルダー用）
     const handleGeneratePDF = useCallback(async () => {
@@ -88,14 +95,14 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                             if (typeof result === 'string') {
                                 resolve(result);
                             } else {
-                                reject('Failed to read image file as string');
+                                reject('画像ファイルを文字列として読み込むことに失敗しました。');
                             }
                         };
-                        reader.onerror = () => reject('Failed to read image file');
+                        reader.onerror = () => reject('画像ファイルの読み込みに失敗しました');
                         reader.readAsDataURL(originalImageFile);
                     });
                 } catch (fileError) {
-                    console.warn('Failed to read original image file:', fileError);
+                    console.warn('元の画像ファイルの読み込みに失敗しました:', fileError);
                 }
             }
 
@@ -103,7 +110,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             const qrResponse = await fetch(qrImageUrl);
             if (!qrResponse.ok) {
                 if (onError) {
-                    onError('Failed to fetch QR code');
+                    onError('QRコードの取得に失敗しました');
                 }
                 return;
             }
@@ -115,10 +122,10 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                     if (typeof result === 'string') {
                         resolve(result);
                     } else {
-                        reject('Failed to read QR code blob as string');
+                        reject('QRコードのBLOBを文字列として読み取れませんでした。');
                     }
                 };
-                reader.onerror = () => reject('Failed to read QR code blob');
+                reader.onerror = () => reject('QRコードのBLOBを読み込めませんでした。');
                 reader.readAsDataURL(qrBlob);
             });
 
@@ -183,13 +190,13 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                     );
 
                 } catch (imgError) {
-                    console.warn('Failed to add image to PDF:', imgError);
+                    console.warn('PDFへの画像の追加に失敗しました：', imgError);
                     // 画像が追加できない場合はプレースホルダーを描画
                     pdf.setDrawColor(200, 200, 200);
                     pdf.rect(imageX + 5, imageY + 5, keychainWidth - 10, keychainHeight - 10);
                     pdf.setFontSize(8);
                     pdf.setDrawColor(0, 0, 0);
-                    pdf.text('Firework Design', imageX + keychainWidth/2, imageY + keychainHeight/2, { align: 'center' });
+                    pdf.text('花火のアイコン', imageX + keychainWidth/2, imageY + keychainHeight/2, { align: 'center' });
                 }
             } else {
                 // プレースホルダー
@@ -197,29 +204,29 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                 pdf.rect(imageX + 5, imageY + 5, keychainWidth - 10, keychainHeight - 10);
                 pdf.setFontSize(8);
                 pdf.setDrawColor(0, 0, 0);
-                pdf.text('Firework Design', imageX + keychainWidth/2, imageY + keychainHeight/2, { align: 'center' });
+                pdf.text('花火のアイコン', imageX + keychainWidth/2, imageY + keychainHeight/2, { align: 'center' });
             }
 
             // ラベルを追加
             pdf.setLineDashPattern([], 0);
             pdf.setDrawColor(0, 0, 0);
             pdf.setFontSize(8);
-            pdf.text('QR Code (裏面)', qrX, qrY + keychainHeight + 5);
-            pdf.text('Design (表面)', imageX, imageY + keychainHeight + 5);
+            pdf.text('QRコード (裏面)', qrX, qrY + keychainHeight + 5);
+            pdf.text('アイコン (表面)', imageX, imageY + keychainHeight + 5);
 
             // 情報セクション
             const infoY = qrY + keychainHeight + 20;
             pdf.setFontSize(10);
-            pdf.text('🔑 Acrylic Keychain Information', margin, infoY);
+            pdf.text('🔑 アクリルキーホルダー情報', margin, infoY);
 
             pdf.setFontSize(8);
-            pdf.text(`Firework ID: ${fireworkId}`, margin, infoY + 8);
-            pdf.text('Insert Size: 45mm × 32mm (each)', margin, infoY + 14);
-            pdf.text('Usage: Place QR code on back, design on front', margin, infoY + 20);
-            pdf.text('Print Size: A4 (210mm × 297mm)', margin, infoY + 26);
+            pdf.text(`花火ID: ${fireworkId}`, margin, infoY + 8);
+            pdf.text('挿入サイズ: 45mm × 32mm（各1枚）', margin, infoY + 14);
+            pdf.text('使い方: QRコードを裏面、アイコンを表面に配置してください', margin, infoY + 20);
+            pdf.text('印刷サイズ: A4（210mm × 297mm）', margin, infoY + 26);
 
             pdf.setFontSize(7);
-            pdf.text('QR Code URL:', margin, infoY + 38);
+            pdf.text('QRコードURL:', margin, infoY + 38);
 
             // URLを複数行に分割
             const urlLines = pdf.splitTextToSize(url, pageWidth - (margin * 2));
@@ -228,15 +235,15 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             // 切り取りガイド
             pdf.setFontSize(7);
             pdf.setTextColor(100, 100, 100);
-            pdf.text('Cut along the border lines for acrylic keychain inserts', margin, qrY + keychainHeight + 12);
+            pdf.text('枠線に沿って切り取って、アクリルキーホルダーに入れてください', margin, qrY + keychainHeight + 12);
 
             // PDFをダウンロード
             pdf.save(`acrylic-keychain-${fireworkId}.pdf`);
 
         } catch (error) {
-            console.error('PDF generation error:', error);
+            console.error('PDF生成エラー:', error);
             if (onError) {
-                onError('Failed to generate PDF');
+                onError('PDFの生成に失敗しました');
             }
         } finally {
             setIsGeneratingPDF(false);
@@ -258,14 +265,14 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                             if (typeof result === 'string') {
                                 resolve(result);
                             } else {
-                                reject('Failed to read image file as string');
+                                reject('画像ファイルを文字列として読み込むことに失敗しました。');
                             }
                         };
                         reader.onerror = () => reject('Failed to read image file');
                         reader.readAsDataURL(originalImageFile);
                     });
                 } catch (fileError) {
-                    console.warn('Failed to read original image file:', fileError);
+                    console.warn('元の画像ファイルの読み込みに失敗しました:', fileError);
                 }
             }
 
@@ -276,7 +283,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print</title>
+    <title>Print Acrylic Keychain - Firework #${fireworkId}</title>
     <style>
         @page {
             size: A4 portrait;
@@ -298,7 +305,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px dashed black; /* ここで黒の破線を追加 */
+            border: 1px dashed black;
         }
         
         .qr-item {
@@ -329,9 +336,16 @@ const QRCodeComponent: FC<QRCodeProps> = ({
         }
         
         .placeholder {
-            display: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 8px;
+            color: #666;
+            text-align: center;
         }
-        
+
         @media print {
             body {
                 -webkit-print-color-adjust: exact;
@@ -348,7 +362,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
     <div class="keychain-item image-item">
         ${originalImageDataUrl ?
                 `<img src="${originalImageDataUrl}" alt="Firework Design" class="image-keychain" />` :
-                ''
+                `<div class="placeholder">Firework Design</div>`
             }
     </div>
     
@@ -388,153 +402,88 @@ const QRCodeComponent: FC<QRCodeProps> = ({
                 } else {
                     URL.revokeObjectURL(blobUrl);
                     if (onError) {
-                        onError('Pop-up blocked. Please check your browser settings and try again.');
+                        onError('ポップアップがブロックされました。ブラウザの設定を確認し、もう一度お試しください。');
                     }
                 }
             } catch (windowError) {
-                console.error('Failed to open print window:', windowError);
+                console.error('印刷ウィンドウを開けませんでした:', windowError);
                 if (onError) {
-                    onError('Failed to open print window. Please check your browser settings.');
+                    onError('印刷ウィンドウを開けませんでした。ブラウザの設定を確認してください。');
                 }
             }
 
         } catch (error) {
-            console.error('Print generation error:', error);
+            console.error('印刷生成エラー:', error);
             if (onError) {
-                onError('Failed to generate print page');
+                onError('印刷用ページの生成に失敗しました。');
             }
         } finally {
             setIsGeneratingPrint(false);
         }
-    }, [qrImageUrl, originalImageFile, onError]); // fireworkIdとurlを追加
-
-    const handleImageError = useCallback(() => {
-        console.error('QR Code image failed to load');
-        setImageError(true);
-    }, []);
-
-    const handleImageLoad = useCallback(() => {
-        setImageError(false);
-    }, []);
-
-    // Button styles
-    const buttonBaseStyle: React.CSSProperties = {
-        color: 'white',
-        padding: '0.75rem 1.5rem',
-        border: 'none',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        fontSize: '0.875rem',
-        fontWeight: '600',
-        transition: 'all 0.2s ease',
-        margin: '0.25rem',
-    };
-
-    const primaryButtonStyle: React.CSSProperties = {
-        ...buttonBaseStyle,
-        background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
-        boxShadow: '0 2px 4px rgba(72, 187, 120, 0.3)',
-    };
-
-    const secondaryButtonStyle: React.CSSProperties = {
-        ...buttonBaseStyle,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)',
-    };
-
-    const tertiaryButtonStyle: React.CSSProperties = {
-        ...buttonBaseStyle,
-        background: 'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)',
-        boxShadow: '0 2px 4px rgba(237, 137, 54, 0.3)',
-    };
+    }, [qrImageUrl, fireworkId, originalImageFile, onError]);
 
     return (
         <div style={{ textAlign: 'center' }}>
-            <div
-                style={{
-                    display: 'inline-block',
-                    padding: '1.5rem',
-                    backgroundColor: 'white',
-                    border: '2px solid #e2e8f0',
-                    borderRadius: '12px',
-                    marginBottom: '1.5rem',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.07)',
-                }}
-            >
-                {imageError ? (
-                    <div
-                        style={{
-                            width: size,
-                            height: size,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: '#fed7d7',
-                            color: '#c53030',
-                            border: '2px solid #feb2b2',
-                            borderRadius: '8px',
-                            fontSize: '0.875rem',
-                            fontWeight: '600'
-                        }}
-                    >
-                        ❌ QR Code failed to load
-                    </div>
-                ) : (
-                    <Image
-                        ref={imgRef}
-                        src={qrImageUrl}
-                        alt="QR Code"
-                        width={size}
-                        height={size}
-                        style={{
-                            display: 'block',
-                            borderRadius: '8px',
-                            border: '1px solid #e2e8f0'
-                        }}
-                        onError={handleImageError}
-                        onLoad={handleImageLoad}
-                        unoptimized={true}
+            <div className="saa" style={{ display: 'flex', justifyContent: 'center'}}>
+                <ImagePreview 
+                    imageUrl={imageUrl}
                     />
-                )}
+                <div
+                    style={{
+                        display: 'inline-block',
+                        padding: '1.5rem',
+                        backgroundColor: 'white',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '12px',
+                        marginBottom: '1.5rem',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.07)',
+                    }}
+                >
+                    {imageError ? (
+                        <div
+                            style={{
+                                width: size,
+                                height: size,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: '#fed7d7',
+                                color: '#c53030',
+                                border: '2px solid #feb2b2',
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                                fontWeight: '600'
+                            }}
+                        >
+                            ❌ QR Code failed to load
+                        </div>
+                    ) : (
+                        <Image
+                            ref={imgRef}
+                            src={qrImageUrl}
+                            alt="QR Code"
+                            width={size}
+                            height={size}
+                            style={{
+                                display: 'block',
+                                borderRadius: '8px',
+                                border: '1px solid #e2e8f0'
+                            }}
+                            onError={handleImageError}
+                            onLoad={handleImageLoad}
+                            unoptimized={true}
+                        />
+                    )}
+                </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                {onDownload && (
-                    <button
-                        onClick={handleDownload}
-                        style={primaryButtonStyle}
-                        title="Download QR Code as PNG"
-                    >
-                        💾 Download QR Code
-                    </button>
-                )}
-
-                <button
-                    onClick={handleGeneratePrintPage}
-                    disabled={isGeneratingPrint}
-                    style={{
-                        ...secondaryButtonStyle,
-                        opacity: isGeneratingPrint ? 0.6 : 1,
-                        cursor: isGeneratingPrint ? 'not-allowed' : 'pointer',
-                    }}
-                    title="Generate printable page for acrylic keychain (45×32mm inserts)"
-                >
-                    {isGeneratingPrint ? '⏳ Generating...' : '🔑 Keychain Print'}
-                </button>
-
-                <button
-                    onClick={handleGeneratePDF}
-                    disabled={isGeneratingPDF}
-                    style={{
-                        ...tertiaryButtonStyle,
-                        opacity: isGeneratingPDF ? 0.6 : 1,
-                        cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
-                    }}
-                    title="Download PDF for acrylic keychain (30×45mm inserts)"
-                >
-                    {isGeneratingPDF ? '⏳ Generating...' : '📄 Keychain PDF'}
-                </button>
-            </div>
+            <QRCodeButtons
+                onDownload={onDownload ? handleDownload : undefined}
+                onGeneratePrint={handleGeneratePrintPage}
+                onGeneratePDF={handleGeneratePDF}
+                isGeneratingPrint={isGeneratingPrint}
+                isGeneratingPDF={isGeneratingPDF}
+            />
 
             <div style={{
                 fontSize: '0.75rem',

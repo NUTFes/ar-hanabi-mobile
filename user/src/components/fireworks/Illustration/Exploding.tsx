@@ -1,179 +1,178 @@
-import { 
-  useRef, 
+import {
+  useRef,
   memo,
   useEffect,
   useState,
-} from 'react'
-import { 
-  useFrame, 
-} from '@react-three/fiber'
-import * as THREE from 'three'
+} from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+import type { ColorParticleData } from '../../types/illustrationFireworksType';
 
 interface Props {
-  color?: THREE.ColorRepresentation; // 花火の色
-  position?: THREE.Vector3; // 花火の打ち上げの中心位置
-  size?: number; // 花火のサイズ(パーティクルではなくて花弁の大きさ)
-  data: boolean[][] // 花火のイラストデータ(booleanの2次元配列)
-  starSize?: number; // 星のサイズ
-  onComplete?: () => void;  // 花火が終了したときのコールバック
+  position?: THREE.Vector3;
+  /** 絵の表示サイズ（座標空間でのスケール） */
+  size?: number;
+  /** パーティクルの点サイズ */
+  starSize?: number;
+  /** 展開アニメーションの時間（秒） */
+  expandTime?: number;
+  /** 展開後のフェードアウト時間（秒） */
+  fadeTime?: number;
+  /** 画像から変換したカラーパーティクルデータ */
+  particleData: ColorParticleData;
+  onComplete?: () => void;
 }
 
-// イラスト花火
-const IllustrationExploding =  memo(function IllustrationExploding({ 
-  color = 'white', 
-  position = new THREE.Vector3(0, 0, 0), 
-  size = 1, 
-  starSize = 0.2,
-  data,
-  onComplete = () => {}
-}: Props) {
-  // width
-  const width = data[0].length // イラストの横幅
-  // height
-  const height = data.length // イラストの縦幅
-  // 重力の強さ
-  const gravity = 0.005
-  // デフォルトの速度
-  const defaultVelocity = 0.3
-  // 星のオフセット
-  const starOffset = 0.01
-  
-  // 星のパーティクルを描画するための参照
-  const starPointsRef = useRef<THREE.Points>(null)  // ポイントの参照
-  const starPositions = useRef(new Float32Array()) // パーティクルの位置を格納する配列
-  const starVelocities = useRef<THREE.Vector3[]>([]) // パーティクルの速度を格納する配列
-  const initTime = useRef<number | null>(null) // シーンが配置されてからの時間を保持する変数
-  
-  const [isCompleted, setIsCompleted] = useState(false) // 花火の完了状態を管理
-  
-  // マウント時の処理とアンマウント時の処理
+/**
+ * イラスト花火の爆発コンポーネント（カラーパーティクル版）
+ *
+ * フェーズ:
+ *   Phase1 (expandTime): 中心から絵の形へ EaseOut 展開
+ *   Phase2 (fadeTime):   絵の形を維持しながらフェードアウト＋重力落下
+ */
+const IllustrationExploding = memo(function IllustrationExploding({
+                                                                    position = new THREE.Vector3(0, 0, 0),
+                                                                    size = 6,
+                                                                    starSize = 0.15,
+                                                                    expandTime = 0.8,
+                                                                    fadeTime = 1.5,
+                                                                    particleData,
+                                                                    onComplete = () => {},
+                                                                  }: Props) {
+  const { particles } = particleData;
+  const count = particles.length;
+
+  // BufferGeometry の attribute
+  const pointsRef = useRef<THREE.Points>(null);
+  const posAttr = useRef<THREE.BufferAttribute | null>(null);
+  const colAttr = useRef<THREE.BufferAttribute | null>(null);
+
+  // 目標座標（絵の形）
+  const targetPositions = useRef<Float32Array>(new Float32Array(count * 3));
+  // 現在座標
+  const currentPositions = useRef<Float32Array>(new Float32Array(count * 3));
+  // 色
+  const colors = useRef<Float32Array>(new Float32Array(count * 3));
+
+  const initTime = useRef<number | null>(null);
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  // ── 初期化 ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    // ====== マウント時の処理 ======
-    // 星のパーティクル位置と速度の初期化
-    const halfWidth = width / 2
-    const halfHeight = height / 2
-    console.log('position', position)
-    const pos: number[] = []
-    
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        // イラストのピクセルがtrueの場合のみパーティクル(星)を生成
-        if (data[y][x]) {
-          // パーティクルの位置を計算
-          const initPos = new THREE.Vector3(
-            (x - halfWidth) * starOffset + position.x,
-            (halfHeight - y) * starOffset + position.y,
-            position.z
-          )
-          
-          // 初期座標
-          pos.push(initPos.x, initPos.y, initPos.z)
+    // 目標座標と色を計算
+    for (let i = 0; i < count; i++) {
+      const p = particles[i];
+      // 正規化座標 (0〜1) → 中心 (0,0) 基準のワールド座標
+      targetPositions.current[i * 3] = (p.x - 0.5) * size + position.x;
+      targetPositions.current[i * 3 + 1] = (p.y - 0.5) * size + position.y;
+      targetPositions.current[i * 3 + 2] = position.z;
 
-          // 星の移動方向を計算
-          const direction = new THREE.Vector3().subVectors(initPos, position)
+      // 初期座標は全て爆発中心
+      currentPositions.current[i * 3] = position.x;
+      currentPositions.current[i * 3 + 1] = position.y;
+      currentPositions.current[i * 3 + 2] = position.z;
 
-          // 速度ベクトル
-          starVelocities.current.push(new THREE.Vector3(
-            direction.x * size,
-            direction.y * size,
-            0 // z軸は固定なので0
-          ).multiplyScalar(defaultVelocity)) // 速度を設定
-        }
-      }
+      // 色（0〜1 に正規化）
+      colors.current[i * 3] = p.r / 255;
+      colors.current[i * 3 + 1] = p.g / 255;
+      colors.current[i * 3 + 2] = p.b / 255;
     }
-    // パーティクルの位置を格納
-    starPositions.current = new Float32Array(pos)
-    
-    // 星のパーティクルのジオメトリを初期化
-    const starGeometry = new THREE.BufferGeometry()
-    starGeometry.setAttribute(
-      'position',
-      new THREE.BufferAttribute(starPositions.current, 3)
-      .setUsage(THREE.DynamicDrawUsage) // 動的に更新するための設定
-    )
-    // ポイントのジオメトリを設定
-    starPointsRef.current!.geometry = starGeometry
-    
-    // ====== アンマウント時の処理 ======
+
+    if (!pointsRef.current) return;
+
+    const geo = new THREE.BufferGeometry();
+
+    const pAttr = new THREE.BufferAttribute(currentPositions.current, 3);
+    pAttr.setUsage(THREE.DynamicDrawUsage);
+    geo.setAttribute('position', pAttr);
+    posAttr.current = pAttr;
+
+    const cAttr = new THREE.BufferAttribute(colors.current, 3);
+    geo.setAttribute('color', cAttr);
+    colAttr.current = cAttr;
+
+    pointsRef.current.geometry = geo;
+
     return () => {
-      // コンポーネントがアンマウントされたときの処理
-      if (starPointsRef.current) {
-        // ジオメトリを解放
-        starPointsRef.current.geometry.dispose()
-        // マテリアルも解放
-        if (Array.isArray(starPointsRef.current.material)) {
-          starPointsRef.current.material.forEach((mat) => mat.dispose())
-        } else {
-          starPointsRef.current.material.dispose()
-        }
+      geo.dispose();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isCompleted) onComplete();
+  }, [isCompleted, onComplete]);
+
+  // ── フレーム更新 ─────────────────────────────────────────────────────────
+  useFrame(({ clock }) => {
+    if (!pointsRef.current || !posAttr.current) return;
+
+    if (initTime.current === null) initTime.current = clock.getElapsedTime();
+    const elapsed = clock.getElapsedTime() - initTime.current;
+    const totalTime = expandTime + fadeTime;
+
+    if (elapsed > totalTime) {
+      setIsCompleted(true);
+      return;
+    }
+
+    const mat = pointsRef.current.material as THREE.PointsMaterial;
+
+    if (elapsed <= expandTime) {
+      // ── Phase1: 展開（EaseOut）──
+      const t = easeOutCubic(elapsed / expandTime);
+      mat.opacity = 1;
+
+      for (let i = 0; i < count; i++) {
+        currentPositions.current[i * 3] = THREE.MathUtils.lerp(
+            position.x,
+            targetPositions.current[i * 3],
+            t
+        );
+        currentPositions.current[i * 3 + 1] = THREE.MathUtils.lerp(
+            position.y,
+            targetPositions.current[i * 3 + 1],
+            t
+        );
+        currentPositions.current[i * 3 + 2] = position.z;
+      }
+    } else {
+      // ── Phase2: フェードアウト＋落下 ──
+      const ft = (elapsed - expandTime) / fadeTime;
+      mat.opacity = Math.max(0, 1 - ft);
+      const gravity = ft * ft * 2; // 放物線的落下
+
+      for (let i = 0; i < count; i++) {
+        currentPositions.current[i * 3] = targetPositions.current[i * 3];
+        currentPositions.current[i * 3 + 1] =
+            targetPositions.current[i * 3 + 1] - gravity;
+        currentPositions.current[i * 3 + 2] = position.z;
       }
     }
-  }, [])
-  
-  useEffect(() => {
-    // 花火が完了したときの処理
-    if (isCompleted) {
-      onComplete()
-    }
-  }, [isCompleted, onComplete])
 
-  // フレームごとの更新
-  useFrame(({clock}) => {
-    if (!starPointsRef.current) return // 存在しなければ何もしない
-    if (initTime.current === null) initTime.current = clock.getElapsedTime();  // グローバル時間を記録
-    
-    // コンポーネント配置からの経過時間を計算
-    const elapsed = clock.getElapsedTime() - initTime.current;
-    
-    // すでに経過時間規定値を超えたら完了
-    if (elapsed > 4) {
-      setIsCompleted(true) // 花火が完了したとフラグを設定
-      return // 以降の処理は行わない
-    }
-    
-    // 一定時間経ったら透明度や速度を減少していく
-    if (elapsed > 0) {
-      const material = starPointsRef.current.material as THREE.PointsMaterial
-      material.opacity = Math.max(0, material.opacity - 0.005)    // 透明度を減少
-      starVelocities.current.forEach(v => v.multiplyScalar(0.98)) // 速度を減衰
-    }
+    posAttr.current.needsUpdate = true;
+  });
 
-    // 各星のパーティクルの位置を更新
-    for (let i = 0; i < starVelocities.current.length; i++) {
-      // if (!starVelocities.current[i]) continue // 安全性チェック
-
-      // 速度を計算
-      const vx = starVelocities.current[i].x
-      const vy = starVelocities.current[i].y - gravity // 重力を適用
-      // const vz = starVelocities.current[i].z // z軸は固定なので使用しない
-      
-      // 位置を更新
-      starPositions.current[i * 3 + 0] += vx
-      starPositions.current[i * 3 + 1] += vy
-      // starPositions.current[i * 3 + 2] += vz
-    }
-    
-    // 更新を反映
-    const starPosAttr = starPointsRef.current.geometry.attributes.position as THREE.BufferAttribute
-    starPosAttr.needsUpdate = true
-  })
+  if (count === 0) return null;
 
   return (
-    <>
-      <points ref={starPointsRef}>
+      <points ref={pointsRef}>
         <bufferGeometry />
         <pointsMaterial
-          size={starSize}
-          color={color}
-          vertexColors={false}
-          depthWrite={false}  // 深度書き込みを無効化
-          // opacity={starOpacity.current}
-          transparent={true} // 透明度を有効化
-          blending={THREE.AdditiveBlending}
+            size={starSize}
+            vertexColors={true}
+            transparent={true}
+            opacity={1}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+            sizeAttenuation={true}
         />
       </points>
-    </>
-  )
-})
+  );
+});
 
-export default IllustrationExploding
+export default IllustrationExploding;
+
+// ── ユーティリティ ───────────────────────────────────────────────────────────
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}

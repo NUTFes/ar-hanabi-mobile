@@ -56,7 +56,7 @@ EXPOSE 5173
 
 # ------ 開発用 -------
 # Viteの開発サーバーを起動
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["sh", "-c", "npm install && ./node_modules/.bin/vite --host 0.0.0.0"]
 # CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
 # CMD ["pnpm", "run", "dev"]
 
