@@ -107,7 +107,8 @@ export const statusBadgeStyle = (isShareable: boolean): React.CSSProperties => (
   borderRadius: '12px',
   fontSize: '0.75rem',
   fontWeight: '600',
-  width: '5.5rem',
+  width: '6.5rem',
   textAlign: 'center',
   flexShrink: 0,
+  whiteSpace: 'nowrap',
 });
