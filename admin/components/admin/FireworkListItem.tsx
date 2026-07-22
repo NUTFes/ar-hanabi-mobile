@@ -25,7 +25,19 @@ export default function FireworkListItem({
       onClick={() => onSelect(firework)}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#2d3748', width: '6rem', flexShrink: 0, whiteSpace: 'nowrap' }}>
+        <div
+          style={{
+            fontWeight: 'bold',
+            marginBottom: '0.5rem',
+            color: '#2d3748',
+            width: '6rem',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+          title={`花火 #${firework.id}`}
+        >
           🎆 花火 #{firework.id}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
@@ -37,9 +49,9 @@ export default function FireworkListItem({
           </span>
         </div>
         <ImagePreview
-      imageUrl={imageUrl}
-      size={50}
-      />
+          imageUrl={imageUrl}
+          size={50}
+        />
       </div>
       
       <div>
