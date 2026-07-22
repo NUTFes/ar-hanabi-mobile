@@ -24,22 +24,34 @@ export default function FireworkListItem({
       style={fireworkItemStyle(isSelected)}
       onClick={() => onSelect(firework)}
     >
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#2d3748' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div
+          style={{
+            fontWeight: 'bold',
+            marginBottom: '0.5rem',
+            color: '#2d3748',
+            width: '6rem',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+          title={`花火 #${firework.id}`}
+        >
           🎆 花火 #{firework.id}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
           <span style={statusBadgeStyle(firework.isShareable)}>
             {firework.isShareable ? '🌐 Shareable' : '🔒 Private'}
           </span>
-          <span style={{ fontSize: '0.75rem', color: '#718096' }}>
+          <span style={{ fontSize: '0.75rem', color: '#718096', minWidth: '6rem' }}>
             📅 {firework.createdAt ? new Date(firework.createdAt).toLocaleDateString() : 'N/A'}
           </span>
         </div>
-        <ImagePreview 
-      imageUrl={imageUrl}
-      size={50}
-      />
+        <ImagePreview
+          imageUrl={imageUrl}
+          size={50}
+        />
       </div>
       
       <div>
