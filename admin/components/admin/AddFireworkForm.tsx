@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { primaryButtonStyle, secondaryButtonStyle, inputStyle } from '@/styles/adminStyles';
 import ImageCropModal from './ImageCropModal';
+import ScanPanel from './ScanPanel';
 
 interface AddFireworkFormProps {
   nextId: number;
@@ -87,6 +88,9 @@ export default function AddFireworkForm({
       </div>
 
       <div>
+        {/* スキャン結果もファイル選択と同じ編集フロー（openEditorForFile）へ流す */}
+        <ScanPanel onScanned={openEditorForFile} />
+
         <label style={{
           display: 'block',
           marginBottom: '0.5rem',

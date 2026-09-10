@@ -96,5 +96,21 @@ func main() {
 
 	openapi.RegisterHandlers(e, fireworkHandler)
 
+	// ネットワーク接続されたスキャナからeSCLで読み取る経路。未設定のまま起動できるようにし、
+	// スキャンを要求された時点で「未設定」を返す（USB接続のみで運用する場合は
+	// ホスト上の scanner-bridge を使うため、こちらの設定は不要）。
+	// 本番ではこの経路は使わない（APIはクラウド側で会場のLANに届かない。eSCLは
+	// 会場のPC上の scanner-bridge が担当する）。開発時に設定外のLANアドレスを
+	// target で指定したい場合だけ SCANNER_ESCL_ALLOW_ANY_TARGET=true にする。
+	esclURL := os.Getenv("SCANNER_ESCL_URL")
+	allowAnyTarget := os.Getenv("SCANNER_ESCL_ALLOW_ANY_TARGET") == "true"
+	if esclURL == "" && !allowAnyTarget {
+		fmt.Println("Scanner (eSCL via API): disabled (production mode; scanner-bridge handles eSCL)")
+	} else {
+		fmt.Println("Scanner (eSCL via API):", esclURL, "allowAnyTarget:", allowAnyTarget)
+	}
+	scanHandler := handler.NewScanHandler(esclURL, allowAnyTarget)
+	scanHandler.RegisterRoutes(e)
+
 	e.Start(":8080")
 }

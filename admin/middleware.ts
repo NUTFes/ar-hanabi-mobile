@@ -6,7 +6,10 @@ export function middleware(req: NextRequest) {
   if (
     pathname.startsWith("/_next/static") ||
     pathname.startsWith("/_next/image") ||
-    pathname === "/favicon.ico"
+    pathname === "/favicon.ico" ||
+    // scanner-bridge の配信。会場のPCが `irm .../bridge/start.ps1 | iex` で取得するため
+    // 認証を通さない（配信するのはコードだけで秘密情報は含まない。app/bridge/[...file]/route.ts）
+    pathname.startsWith("/bridge/")
   ) {
     return NextResponse.next();
   }
