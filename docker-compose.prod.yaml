@@ -29,10 +29,15 @@ services:
       - ./admin:/app
       - /app/node_modules
       - /app/.next
+      # 管理画面から scanner-bridge を配信する（/bridge/*）。会場PCのワンライナー起動用
+      - ./scanner-bridge:/app/bridge-src:ro
     environment:
+      BRIDGE_SOURCE_DIR: /app/bridge-src
       NEXT_PUBLIC_API_URL: ${API_BASE_URL}
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      # USB接続のスキャナ用ローカルブリッジ。管理画面を開くPC上で起動しておく
+      NEXT_PUBLIC_SCANNER_BRIDGE_URL: ${SCANNER_BRIDGE_URL:-http://localhost:8090}
     networks:
       - app_network
     depends_on:
@@ -56,6 +61,10 @@ services:
       STORAGE_BUCKET: fireworks
       STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
       STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY}
+      # 本番ではAPI経由のeSCLスキャンは使わない（APIはクラウド側で会場のLANに届かない。
+      # 会場PCの scanner-bridge がeSCLを担当）。SSRFの入口にならないよう任意targetは許可しない
+      SCANNER_ESCL_URL: ${SCANNER_ESCL_URL:-}
+      SCANNER_ESCL_ALLOW_ANY_TARGET: "false"
     volumes:
       - ./api:/app
     working_dir: /app

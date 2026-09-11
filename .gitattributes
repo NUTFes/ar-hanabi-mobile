@@ -1,0 +1,6 @@
+# シェルスクリプトは必ずLFでチェックアウトする。
+# Windowsで作業するとCRLFになり、実行時に `$'\r': command not found` や
+# `set: - : invalid option` で失敗する（api/start.sh で実際に発生していた）。
+# scanner-bridge/start.sh は管理画面から配信してmacOSのbashで実行されるため、
+# CRLFだと起動できない。
+*.sh text eol=lf
