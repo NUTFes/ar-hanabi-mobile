@@ -26,10 +26,21 @@ services:
       - ./admin:/app
       - /app/node_modules
       - /app/.next
+      # 管理画面から scanner-bridge を配信する（/bridge/*）。会場PCのワンライナー起動用
+      - ./scanner-bridge:/app/bridge-src:ro
     environment:
+      - BRIDGE_SOURCE_DIR=/app/bridge-src
       - NEXT_PUBLIC_API_URL=http://localhost:8080
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      # Windows/macOSのバインドマウントではコンテナへファイル変更通知が届かず、
+      # ソースを編集してもNext.jsが再コンパイルしない（古い画面が出続ける）。
+      # ポーリングで監視させる
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      # USB接続のスキャナ用ローカルブリッジ（ホスト上で `node scanner-bridge/server.js` を起動）。
+      # ブラウザから直接叩くため、コンテナ内ではなくホストから見えるURLを指定する
+      - NEXT_PUBLIC_SCANNER_BRIDGE_URL=${SCANNER_BRIDGE_URL:-http://localhost:8090}
     networks:
       - app_network
     depends_on:
@@ -52,6 +63,11 @@ services:
       STORAGE_BUCKET: fireworks
       STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
       STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY}
+      # 開発用: APIから直接eSCLでスキャンする接続先（例: http://192.168.1.50、カンマ区切り可）。
+      # 本番ではAPIが会場のLANに届かないためこの経路は使わず、会場PCの scanner-bridge が
+      # eSCLを担当する。ALLOW_ANY_TARGET は開発時のみ true（設定外のLANアドレスを許可）
+      SCANNER_ESCL_URL: ${SCANNER_ESCL_URL:-}
+      SCANNER_ESCL_ALLOW_ANY_TARGET: ${SCANNER_ESCL_ALLOW_ANY_TARGET:-true}
     ports:
       - "8080:8080"
     volumes:

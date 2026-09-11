@@ -6,6 +6,7 @@ import QRCodeButtons from "./QRCodeButtons";
 import ImagePreview from "./admin/ImagePreview";
 import { createImage } from "@/utils/cropImage";
 import { removeWhiteBackground } from "@/utils/removeWhiteBackground";
+import { flattenOnWhite } from "@/utils/flattenOnWhite";
 
 interface QRCodeProps {
     url: string;
@@ -357,14 +358,31 @@ const QRCodeComponent: FC<QRCodeProps> = ({
         setIsGeneratingPrint(true);
 
         try {
+            // QRコードの取得は画像処理と独立しているため、先に通信を始めて並行実行する
+            const qrFetchPromise = fetch(qrImageUrl);
+
             const originalImageDataUrl = await resolveOriginalImageDataUrl(
                 originalImageFile,
                 imageUrl
             );
-            // 印刷ページもPDFと同じ透過PNGを使い、白背景を印刷しない。
+            // 印刷ページもPDFと同じく白背景を除去した画像を使う。ただし印刷経路では、
+            // 透過PNGのアルファチャンネルを正しく描画できないプリンタードライバー
+            // （Canon等）があり、透過部分が黒くなる／画像が出力されないことがあるため、
+            // 白へ合成してから埋め込む。白い紙では透明と白は同じ結果になるので見た目は変わらない。
             const printImageSrc = originalImageDataUrl
-                ? await removeWhiteBackground(originalImageDataUrl)
+                ? await flattenOnWhite(await removeWhiteBackground(originalImageDataUrl))
                 : '';
+
+            // QRコードは外部URLの直参照ではなくdata URLとして埋め込む。印刷ウィンドウ側で
+            // 画像の取得が終わらないまま印刷ダイアログが開くと、QRコードが白紙で印刷される。
+            const qrResponse = await qrFetchPromise;
+            if (!qrResponse.ok) {
+                if (onError) {
+                    onError('QRコードの取得に失敗しました');
+                }
+                return;
+            }
+            const qrDataUrl = await blobToDataUrl(await qrResponse.blob());
 
             // 印刷用のHTMLを生成（アクリルキーホルダー用レイアウト）
             const printHTML = `
@@ -439,17 +457,44 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             text-align: center;
         }
 
+        /* 画面上だけに表示する操作パネル（印刷結果には含めない） */
+        .print-actions {
+            position: absolute;
+            top: 55mm;
+            left: 10mm;
+            width: 190mm;
+            font-family: sans-serif;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .print-actions button {
+            font-size: 13px;
+            padding: 6px 14px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .print-actions .hint {
+            margin-top: 8px;
+            line-height: 1.7;
+        }
+
         @media print {
             body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+            }
+
+            .print-actions {
+                display: none !important;
             }
         }
     </style>
 </head>
 <body>
     <div class="keychain-item qr-item">
-        <img src="${qrImageUrl}" alt="QR Code" class="qr-code-keychain" />
+        <img src="${qrDataUrl}" alt="QR Code" class="qr-code-keychain" />
     </div>
     
     <div class="keychain-item image-item">
@@ -459,24 +504,54 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             }
     </div>
     
+    <div class="print-actions" id="print-actions" hidden>
+        <button type="button" onclick="window.print()">もう一度印刷する</button>
+        <button type="button" onclick="window.close()">このタブを閉じる</button>
+        <p class="hint">
+            印刷ダイアログでは「用紙サイズ: A4」「倍率: 実際のサイズ（100%）」を選んでください。<br>
+            「用紙に合わせる」で印刷すると 45×32mm からずれ、キーホルダーに入らなくなります。<br>
+            送信先のプリンターも確認してください。接続していないプリンター（USBを抜いた状態のキュー等）を
+            選ぶと、エラーにならずジョブが溜まるだけで印刷されません。
+        </p>
+    </div>
+
     <script>
-        // ページが読み込まれたら自動的に印刷ダイアログを表示
-        window.onload = function() {
-            setTimeout(function() {
+        // 画像の読み込みとデコードが終わってから印刷ダイアログを開く。
+        // 固定のsetTimeoutで待つ方式は、待ち時間が足りなければ白紙で印刷され、
+        // 足りていれば無駄に待たされる。
+        function waitForImages() {
+            return Promise.all(Array.prototype.map.call(document.images, function (img) {
+                if (img.decode) {
+                    // デコードに失敗しても（画像が壊れている等）印刷自体は続行する
+                    return img.decode().catch(function () {});
+                }
+                if (img.complete) {
+                    return Promise.resolve();
+                }
+                return new Promise(function (resolve) {
+                    img.addEventListener('load', resolve, { once: true });
+                    img.addEventListener('error', resolve, { once: true });
+                });
+            }));
+        }
+
+        window.addEventListener('load', function () {
+            waitForImages().then(function () {
+                document.getElementById('print-actions').hidden = false;
                 try {
                     window.print();
                 } catch (e) {
                     console.error('Print failed:', e);
                 }
-            }, 1000);
-        };
-        
-        // 印刷後にウィンドウを閉じる
-        window.onafterprint = function() {
-            setTimeout(function() {
-                window.close();
-            }, 500);
-        };
+            });
+        });
+
+        // window.onafterprint でこのウィンドウを自動的に閉じてはいけない。
+        // onafterprintは「ジョブの送信完了」ではなく「印刷ダイアログが閉じた」時点で
+        // 発火するため、スプール中にページを破棄すると印刷が実行されないことがある。
+        // 特にCanonのように独自の設定ダイアログを開くドライバーでは、
+        // 「システムダイアログを使用して印刷」を選んだ時点でこのウィンドウが閉じ、
+        // ジョブごと失われる。閉じる操作はユーザーに任せる。
     </script>
 </body>
 </html>`;
