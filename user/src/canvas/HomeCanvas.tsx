@@ -99,6 +99,11 @@ const CanvasSetup = forwardRef<CanvasSetupHandle>((_,  ref) => {
 
   console.log('ARToolkitSource:', arToolkitSource);
 
+  // AR.js側で登録したwindowのresizeリスナー等を、アンマウント時に解除する
+  useEffect(() => {
+    return () => arData.dispose();
+  }, [arData]);
+
   useEffect(() => {
     camera.position.set(0, 0, 30);
   }, [camera]);
@@ -151,9 +156,10 @@ const CanvasSetup = forwardRef<CanvasSetupHandle>((_,  ref) => {
               luminanceThreshold={0.2}
               luminanceSmoothing={0.2}
               intensity={0.6}
-              width={window.innerWidth}
-              height={window.innerHeight}
               mipmapBlur={true}
+              // width/height を指定するとpostprocessing側でresolutionScaleが無視されるため
+              // （Resolution.updateEffectiveSize()がpreferredWidth/Heightを優先する仕様）、
+              // 指定しない。こうすることでBloomの解像度がdprと実際のcanvasサイズに追従する
               resolutionScale={window.devicePixelRatio > 2 ? 1.0 : 1.5}
           />
         </EffectComposer>
