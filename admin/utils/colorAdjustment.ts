@@ -81,19 +81,14 @@ export function createNeutralHueBoosts(): number[] {
   return HUE_BANDS.map(() => 1);
 }
 
-/** 補正なし（従来どおりの保存） */
+/**
+ * 補正なし（従来どおりの保存）。保存済みの設定が無いときの既定値でもある。
+ * 淡い色が拾えないときだけ操作者が上げる前提にして、勝手に色が変わらないようにする。
+ */
 export const NEUTRAL_COLOR_ADJUSTMENT: ColorAdjustment = {
   saturation: 1,
   blackLevel: 0,
   autoWhiteBalance: false,
-  hueBoosts: createNeutralHueBoosts(),
-};
-
-/** 既定値。淡いピンクを拾えるようにしつつ、白紙のざらつきは拾わない強さ */
-export const DEFAULT_COLOR_ADJUSTMENT: ColorAdjustment = {
-  saturation: 1.8,
-  blackLevel: 24,
-  autoWhiteBalance: true,
   hueBoosts: createNeutralHueBoosts(),
 };
 

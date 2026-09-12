@@ -17,9 +17,9 @@ import {
   pickHueBandAt,
   BLACK_LEVEL_RANGE,
   COLOR_ADJUSTMENT_PRESETS,
-  DEFAULT_COLOR_ADJUSTMENT,
   HUE_BANDS,
   HUE_BOOST_RANGE,
+  NEUTRAL_COLOR_ADJUSTMENT,
   SATURATION_RANGE,
   type ColorAdjustment,
   type WhiteBalanceGains,
@@ -125,7 +125,7 @@ export default function ImageCropModal({
   const [mediaNaturalSize, setMediaNaturalSize] = useState<{ width: number; height: number } | null>(null);
   const hasAutoFittedRef = useRef(false);
 
-  const [adjustment, setAdjustment] = useState<ColorAdjustment>(DEFAULT_COLOR_ADJUSTMENT);
+  const [adjustment, setAdjustment] = useState<ColorAdjustment>(NEUTRAL_COLOR_ADJUSTMENT);
   const [whiteBalanceGains, setWhiteBalanceGains] = useState<WhiteBalanceGains | null>(null);
   const [previewSource, setPreviewSource] = useState<ImageData | null>(null);
   const [pickSource, setPickSource] = useState<ImageData | null>(null);
