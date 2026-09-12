@@ -27,7 +27,7 @@ export default function IdManagementInfo({ nextId, totalCount }: IdManagementInf
           <strong>安全性:</strong> ↑により、削除された花火のデータへの誤ったアクセスを防ぎ、QRコードのURLが一意であることを保証します。
         </p>
         <p style={{ marginBottom: '0.5rem' }}>
-          <strong>画像ストレージ:</strong> 花火の作成時に画像は自動的にlocalStorageへ保存され、セッションをまたいで保持されます。古い画像（30日以上経過したもの）は自動的に削除されます。
+          <strong>画像ストレージ:</strong> 花火の作成時に、印刷・PDF用の控えとして画像を縮小したコピー（長辺1024px）が自動的にlocalStorageへ保存され、セッションをまたいで保持されます。古い画像（30日以上経過したもの）は自動的に削除され、容量が足りなくなった場合も古いものから削除されます。控えが無い花火は、印刷・PDFの際にサーバー上の画像を使います。
         </p>
         <p>
           <strong>花火の総数:</strong> {totalCount} （有効な花火{totalCount !== 1 ? 'ら' : ''}）
