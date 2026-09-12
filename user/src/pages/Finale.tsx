@@ -115,7 +115,7 @@ export default function Finale() {
   };
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div className="hb-viewport-fill" style={{ width: '100vw', overflow: 'hidden' }}>
       {/* イラスト花火のデータが読み込まれた場合はFinaleCanvasを表示 */}
       <FinaleCanvas
         ref={finaleCanvasRef} // FinaleCanvasへの参照を渡す
