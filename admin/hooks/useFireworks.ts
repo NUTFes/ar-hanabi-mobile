@@ -1,4 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import {
+  createStoredImage,
+  getFireworkImageKey,
+  setItemEvictingOldImages,
+  FIREWORK_IMAGE_KEY_PREFIX,
+} from '@/utils/imageStorage';
 
 export interface Firework {
   id: number;
@@ -27,47 +33,26 @@ export function useFireworks() {
 
   // ---- localStorage helpers ----
 
-  const getImageStorageKey = useCallback((fireworkId: number) => {
-    return `firework_image_${fireworkId}`;
-  }, []);
-
+  // 印刷・PDFの元画像として使う控え。原寸のまま入れると数枚〜100枚程度で
+  // localStorageを使い切るため、縮小コピーを保存し、それでも足りなければ
+  // 古い花火の控えから消して空きを作る（消しても印刷はAPI上の画像で代替できる）。
   const saveImageToLocalStorage = useCallback(async (fireworkId: number, file: File) => {
-    try {
-      return new Promise<void>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            const result = reader.result as string;
-            const imageData = {
-              dataUrl: result,
-              fileName: file.name,
-              fileSize: file.size,
-              fileType: file.type,
-              lastModified: file.lastModified,
-              savedAt: Date.now()
-            };
-            localStorage.setItem(getImageStorageKey(fireworkId), JSON.stringify(imageData));
-            resolve();
-          } catch (error) {
-            console.error('Failed to save image to localStorage:', error);
-            reject(error);
-          }
-        };
-        reader.onerror = () => {
-          console.error('Failed to read file for localStorage');
-          reject(new Error('Failed to read file'));
-        };
-        reader.readAsDataURL(file);
-      });
-    } catch (error) {
-      console.error('Error saving image to localStorage:', error);
-      throw error;
+    const storedImage = await createStoredImage(file);
+    const saved = setItemEvictingOldImages(
+      getFireworkImageKey(fireworkId),
+      JSON.stringify(storedImage)
+    );
+
+    if (!saved) {
+      console.warn(
+        `花火 #${fireworkId} の画像をlocalStorageへ保存できませんでした（印刷時はサーバー上の画像を使います）`
+      );
     }
-  }, [getImageStorageKey]);
+  }, []);
 
   const loadImageFromLocalStorage = useCallback(async (fireworkId: number): Promise<File | null> => {
     try {
-      const stored = localStorage.getItem(getImageStorageKey(fireworkId));
+      const stored = localStorage.getItem(getFireworkImageKey(fireworkId));
       if (!stored) return null;
 
       const imageData = JSON.parse(stored);
@@ -88,7 +73,7 @@ export function useFireworks() {
       console.error(`Error loading image from localStorage for firework #${fireworkId}:`, error);
       return null;
     }
-  }, [getImageStorageKey]);
+  }, []);
 
   const loadAllImagesFromLocalStorage = useCallback(async (fireworkList: Firework[]) => {
     if (fireworkList.length === 0) {
@@ -114,11 +99,11 @@ export function useFireworks() {
 
   const removeImageFromLocalStorage = useCallback((fireworkId: number) => {
     try {
-      localStorage.removeItem(getImageStorageKey(fireworkId));
+      localStorage.removeItem(getFireworkImageKey(fireworkId));
     } catch (error) {
       console.error(`Failed to remove image from localStorage for firework #${fireworkId}:`, error);
     }
-  }, [getImageStorageKey]);
+  }, []);
 
   const cleanupOldImages = useCallback(() => {
     try {
@@ -127,7 +112,7 @@ export function useFireworks() {
 
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('firework_image_')) {
+        if (key && key.startsWith(FIREWORK_IMAGE_KEY_PREFIX)) {
           try {
             const stored = localStorage.getItem(key);
             if (stored) {
