@@ -209,3 +209,51 @@ export async function removeWhiteBackground(
   context.putImageData(imageData, 0, 0);
   return canvas.toDataURL('image/png');
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// プレビュー用（色の調整で「何が拾われるか」を確認するためのヘルパー）
+// ────────────────────────────────────────────────────────────────────────────
+
+/** 背景として消される画素の代わりに塗る色（市松模様にせず、絵と紛れない薄いグレー） */
+const DROPPED_PIXEL_COLOR: [number, number, number] = [226, 232, 240];
+
+/**
+ * 花火の粒子・印刷対象として残る画素の割合（0〜1）を返す。
+ *
+ * isBackgroundPixel は「白」と「無彩色ノイズ」を判定する関数であり、
+ * これに当たらない画素がそのままインク（＝残る画素）になる。
+ * user/src/utils/imageToParticles.ts の classifyPixel と同じ基準のため、
+ * この割合は花火の粒子として拾われる量の目安にもなる。
+ */
+export function measureInkRatio(imageData: ImageData): number {
+  const pixels = imageData.data;
+  let ink = 0;
+  let total = 0;
+
+  for (let index = 0; index < pixels.length; index += 4) {
+    if (pixels[index + 3] === 0) continue;
+    total += 1;
+    if (!isBackgroundPixel(pixels[index], pixels[index + 1], pixels[index + 2])) {
+      ink += 1;
+    }
+  }
+
+  return total === 0 ? 0 : ink / total;
+}
+
+/**
+ * 背景として消される画素を薄いグレーで塗りつぶし、残る画素だけを見えるようにする
+ * （色の調整で淡い色が拾えるようになったかを目視で確かめるためのプレビュー）。
+ */
+export function maskBackgroundPixels(imageData: ImageData): void {
+  const pixels = imageData.data;
+
+  for (let index = 0; index < pixels.length; index += 4) {
+    if (pixels[index + 3] === 0) continue;
+    if (!isBackgroundPixel(pixels[index], pixels[index + 1], pixels[index + 2])) continue;
+
+    pixels[index] = DROPPED_PIXEL_COLOR[0];
+    pixels[index + 1] = DROPPED_PIXEL_COLOR[1];
+    pixels[index + 2] = DROPPED_PIXEL_COLOR[2];
+  }
+}
