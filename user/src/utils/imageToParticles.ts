@@ -1,8 +1,15 @@
 import type { ColorParticle, ColorParticleData } from '../types/illustrationFireworksType';
 
 export interface ImageToParticlesOptions {
-    /** リサイズ後の一辺のピクセル数（デフォルト: 64） */
+    /** リサイズ後の短辺のピクセル数（デフォルト: 64） */
     resolution?: number;
+    /**
+     * サンプリングに使うキャンバスの縦横比（幅/高さ、デフォルト: 1＝正方形）。
+     * 管理画面の印刷レイアウト（キーホルダー内の絵表示エリア）と同じ比率を渡すと、
+     * 正方形の絵をその比率の枠に contain 配置したときと同じ余白の付き方になり、
+     * 印刷される見た目とAR花火の見た目が一致する。
+     */
+    aspectRatio?: number;
     /** 白とみなす知覚輝度のしきい値 0〜255（デフォルト: 200） */
     whiteThreshold?: number;
     /** 彩度しきい値 max-min（デフォルト: 30）これ未満はノイズとして除外 */
@@ -49,6 +56,7 @@ export async function imageUrlToParticles(
 ): Promise<ColorParticleData> {
     const {
         resolution = 64,
+        aspectRatio = 1,
         whiteThreshold = 200,
         saturationThreshold = 30,
         blackLuminanceThreshold = 120,
@@ -64,13 +72,13 @@ export async function imageUrlToParticles(
         includeWhite,
     };
 
-    const particles = await sampleParticles(imageUrl, resolution, filterOptions);
+    const particles = await sampleParticles(imageUrl, resolution, aspectRatio, filterOptions);
 
     console.log(
-        `[imageToParticles] ${resolution}×${resolution} → ${particles.length} particles`
+        `[imageToParticles] resolution=${resolution} aspectRatio=${aspectRatio} → ${particles.length} particles`
     );
 
-    return { particles, resolution };
+    return { particles, resolution, aspectRatio };
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -147,16 +155,24 @@ function loadImage(url: string): Promise<HTMLImageElement> {
 async function sampleParticles(
     url: string,
     n: number,
+    aspectRatio: number,
     opts: FilterOptions
 ): Promise<ColorParticle[]> {
     const img = await loadImage(url);
 
+    // resolutionは「短辺のグリッド数」として扱い、長辺側は aspectRatio に応じて増減させる
+    // （aspectRatio=1なら従来どおり n×n の正方形グリッドになる）。
+    const nx = aspectRatio >= 1 ? Math.round(n * aspectRatio) : n;
+    const ny = aspectRatio >= 1 ? n : Math.round(n / aspectRatio);
+
     const nativeMax = Math.max(img.naturalWidth, img.naturalHeight);
-    const scanSize = Math.max(n, Math.min(nativeMax, MAX_SCAN_SIZE));
+    const scanShort = Math.max(n, Math.min(nativeMax, MAX_SCAN_SIZE));
+    const scanWidth = aspectRatio >= 1 ? Math.round(scanShort * aspectRatio) : scanShort;
+    const scanHeight = aspectRatio >= 1 ? scanShort : Math.round(scanShort / aspectRatio);
 
     const canvas = document.createElement('canvas');
-    canvas.width = scanSize;
-    canvas.height = scanSize;
+    canvas.width = scanWidth;
+    canvas.height = scanHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
         throw new Error('Failed to get 2D canvas context');
@@ -166,35 +182,35 @@ async function sampleParticles(
     // 余白を残す）で画像を配置している。ここも同じ contain 方式にすることで、アップロード時に
     // クロップした正方形の領域と、印刷される領域・花火になる領域を一致させる
     // （非正方形の画像が来ても引き伸ばさず、余白として除外されるだけにする）。
-    const scale = Math.min(scanSize / img.naturalWidth, scanSize / img.naturalHeight);
+    const scale = Math.min(scanWidth / img.naturalWidth, scanHeight / img.naturalHeight);
     const drawWidth = img.naturalWidth * scale;
     const drawHeight = img.naturalHeight * scale;
-    const offsetX = (scanSize - drawWidth) / 2;
-    const offsetY = (scanSize - drawHeight) / 2;
+    const offsetX = (scanWidth - drawWidth) / 2;
+    const offsetY = (scanHeight - drawHeight) / 2;
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-    const data = ctx.getImageData(0, 0, scanSize, scanSize).data;
+    const data = ctx.getImageData(0, 0, scanWidth, scanHeight).data;
 
     // セルごとに「インク」画素の合計値と件数、「白」画素の件数を集計する
-    const cellCount = n * n;
+    const cellCount = nx * ny;
     const sumR = new Float64Array(cellCount);
     const sumG = new Float64Array(cellCount);
     const sumB = new Float64Array(cellCount);
     const inkCount = new Int32Array(cellCount);
     const whiteCount = new Int32Array(cellCount);
 
-    for (let sy = 0; sy < scanSize; sy++) {
-        // scanSize座標系 → n座標系へのマッピング
-        const py = Math.min(n - 1, Math.floor((sy * n) / scanSize));
-        for (let sx = 0; sx < scanSize; sx++) {
-            const px = Math.min(n - 1, Math.floor((sx * n) / scanSize));
-            const idx = (sy * scanSize + sx) * 4;
+    for (let sy = 0; sy < scanHeight; sy++) {
+        // scan座標系 → n座標系へのマッピング
+        const py = Math.min(ny - 1, Math.floor((sy * ny) / scanHeight));
+        for (let sx = 0; sx < scanWidth; sx++) {
+            const px = Math.min(nx - 1, Math.floor((sx * nx) / scanWidth));
+            const idx = (sy * scanWidth + sx) * 4;
             const r = data[idx];
             const g = data[idx + 1];
             const b = data[idx + 2];
             // alpha は使用しない（背景が透明な場合も色として扱う）
 
             const cls = classifyPixel(r, g, b, opts);
-            const cellIdx = py * n + px;
+            const cellIdx = py * nx + px;
 
             if (cls === 'ink') {
                 sumR[cellIdx] += r;
@@ -208,12 +224,12 @@ async function sampleParticles(
     }
 
     const particles: ColorParticle[] = [];
-    for (let py = 0; py < n; py++) {
-        for (let px = 0; px < n; px++) {
-            const cellIdx = py * n + px;
+    for (let py = 0; py < ny; py++) {
+        for (let px = 0; px < nx; px++) {
+            const cellIdx = py * nx + px;
             // y は上が 0 → Three.js では上が正なので反転
-            const x = px / (n - 1);
-            const y = 1 - py / (n - 1);
+            const x = px / (nx - 1);
+            const y = 1 - py / (ny - 1);
 
             if (inkCount[cellIdx] > 0) {
                 // 周囲の白画素は平均に混ぜないため、細い線でも薄まらない

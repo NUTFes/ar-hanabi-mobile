@@ -39,8 +39,12 @@ const IllustrationExploding = memo(function IllustrationExploding({
                                                                     particleData,
                                                                     onComplete = () => {},
                                                                   }: Props) {
-  const { particles } = particleData;
+  const { particles, aspectRatio } = particleData;
   const count = particles.length;
+  // 長辺が size になるよう、縦横比に応じてスケールを分離する
+  // （aspectRatio=1なら従来どおり sizeX = sizeY = size）
+  const sizeX = aspectRatio >= 1 ? size : size * aspectRatio;
+  const sizeY = aspectRatio >= 1 ? size / aspectRatio : size;
 
   // BufferGeometry の attribute
   const pointsRef = useRef<THREE.Points>(null);
@@ -63,8 +67,8 @@ const IllustrationExploding = memo(function IllustrationExploding({
     for (let i = 0; i < count; i++) {
       const p = particles[i];
       // 正規化座標 (0〜1) → 中心 (0,0) 基準のワールド座標
-      targetPositions.current[i * 3] = (p.x - 0.5) * size + position.x;
-      targetPositions.current[i * 3 + 1] = (p.y - 0.5) * size + position.y;
+      targetPositions.current[i * 3] = (p.x - 0.5) * sizeX + position.x;
+      targetPositions.current[i * 3 + 1] = (p.y - 0.5) * sizeY + position.y;
       targetPositions.current[i * 3 + 2] = position.z;
 
       // 初期座標は全て爆発中心

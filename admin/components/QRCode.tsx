@@ -7,6 +7,7 @@ import ImagePreview from "./admin/ImagePreview";
 import { createImage } from "@/utils/cropImage";
 import { removeWhiteBackground } from "@/utils/removeWhiteBackground";
 import { flattenOnWhite } from "@/utils/flattenOnWhite";
+import { KEYCHAIN_WIDTH_MM, KEYCHAIN_HEIGHT_MM, KEYCHAIN_PADDING_MM } from "@/utils/keychainLayout";
 
 interface QRCodeProps {
     url: string;
@@ -222,8 +223,8 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             // const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
             // アクリルキーホルダーのサイズ（45×32mm）
-            const keychainWidth = 45;
-            const keychainHeight = 32;
+            const keychainWidth = KEYCHAIN_WIDTH_MM;
+            const keychainHeight = KEYCHAIN_HEIGHT_MM;
             const margin = 10;
 
             // QRコード（左上）
@@ -237,7 +238,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             // アクリルキーホルダーへの挿入時にはカット誤差が出るため、切り取り線（点線）に
             // ぴったり接する配置は避け、QR・画像の両方に同じ余白を確保する
             // （印刷用HTML側の .qr-code-keychain / .image-keychain の padding: 2mm と揃えること）
-            const keychainPadding = 2;
+            const keychainPadding = KEYCHAIN_PADDING_MM;
 
             // 枠線を描画
             pdf.setDrawColor(150, 150, 150);
@@ -407,8 +408,8 @@ const QRCodeComponent: FC<QRCodeProps> = ({
         }
         
         .keychain-item {
-            width: 45mm;
-            height: 32mm;
+            width: ${KEYCHAIN_WIDTH_MM}mm;
+            height: ${KEYCHAIN_HEIGHT_MM}mm;
             /* border を含めて 45×32mm にする。content-box のままだと枠線が実寸より
                外側にはみ出し、PDF側の pdf.rect(45, 32) と切り取り線のサイズがずれる */
             box-sizing: border-box;
@@ -434,7 +435,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             height: 100%;
             object-fit: contain;
             /* 切り取り線に接しないよう、PDF側の keychainPadding と同じ余白を確保する */
-            padding: 2mm;
+            padding: ${KEYCHAIN_PADDING_MM}mm;
             box-sizing: border-box;
         }
 
@@ -442,7 +443,7 @@ const QRCodeComponent: FC<QRCodeProps> = ({
             width: 100%;
             height: 100%;
             object-fit: contain;
-            padding: 2mm;
+            padding: ${KEYCHAIN_PADDING_MM}mm;
             box-sizing: border-box;
         }
         

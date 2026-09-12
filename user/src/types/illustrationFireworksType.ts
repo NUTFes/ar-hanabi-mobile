@@ -21,5 +21,7 @@ export interface ColorParticle {
 // 画像から変換したパーティクルデータ
 export interface ColorParticleData {
   particles: ColorParticle[];
-  resolution: number; // グリッドの一辺のピクセル数
+  resolution: number; // グリッドの短辺のピクセル数
+  // パーティクル分布領域の縦横比（幅/高さ）。1なら正方形。
+  aspectRatio: number;
 }

@@ -108,6 +108,7 @@ function booleanToParticleData(data: boolean[][]): ColorParticleData {
   const height = data.length;
   const width = data[0]?.length ?? 0;
   const resolution = Math.max(width, height);
+  const aspectRatio = height > 0 ? width / height : 1;
   const particles = [];
 
   for (let y = 0; y < height; y++) {
@@ -124,5 +125,5 @@ function booleanToParticleData(data: boolean[][]): ColorParticleData {
     }
   }
 
-  return { particles, resolution };
+  return { particles, resolution, aspectRatio };
 }

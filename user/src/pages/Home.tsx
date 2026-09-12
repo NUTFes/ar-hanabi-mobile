@@ -10,6 +10,7 @@ import type { IllustrationFireworksType } from '../types/illustrationFireworksTy
 import type { ColorParticleData } from '../types/illustrationFireworksType';
 import { imageUrlToParticles } from '../utils/imageToParticles';
 import { toSameOriginUrl } from '../config/apiConfig';
+import { KEYCHAIN_IMAGE_ASPECT } from '../utils/keychainLayout';
 import { useGetFireworkById } from '../apiClient/fireworks/myARProjectAPI';
 import ScanModal from '../components/common/ScanModal';
 import type { HomeCanvasHandle } from '../canvas/HomeCanvas';
@@ -118,6 +119,10 @@ export default function Home() {
     setIsConverting(true);
     imageUrlToParticles(toSameOriginUrl(data.imageUrl), {
       resolution, // 画質設定（低32 / 中64 / 高128）
+      // 管理画面のトリミングは正方形だが、印刷（アクリルキーホルダー）は
+      // その正方形をキーホルダー比率の枠に contain 配置している。
+      // 花火もそれと同じ余白の付き方にすることで、印刷される絵とAR花火の見た目を一致させる
+      aspectRatio: KEYCHAIN_IMAGE_ASPECT,
       whiteThreshold: 200,
       saturationThreshold: 30,
       whiteSaturationRatio: 0.2,
