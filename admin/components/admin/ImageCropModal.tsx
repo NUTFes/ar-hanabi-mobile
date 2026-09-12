@@ -132,7 +132,8 @@ export default function ImageCropModal({
   const [pickedBandKey, setPickedBandKey] = useState<string | null>(null);
   const [pickMessage, setPickMessage] = useState<string | null>(null);
   const [showInkOnly, setShowInkOnly] = useState(false);
-  const [isHueSectionOpen, setIsHueSectionOpen] = useState(false);
+  // 設定はブラウザに保存され次の取り込みにも使われるため、既定は閉じた状態にする
+  const [isColorSectionOpen, setIsColorSectionOpen] = useState(false);
   const [inkRatios, setInkRatios] = useState<{ before: number; after: number } | null>(null);
   const beforeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const afterCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -264,7 +265,6 @@ export default function ImageCropModal({
       hueBoosts[picked.bandIndex] = Number(next.toFixed(1));
 
       updateAdjustment({ ...adjustment, hueBoosts });
-      setIsHueSectionOpen(true);
       setPickedBandKey(band.key);
       setPickMessage(
         next >= HUE_BOOST_RANGE.max
@@ -275,14 +275,29 @@ export default function ImageCropModal({
     [pickSource, adjustment, updateAdjustment]
   );
 
-  // 折りたたんでいる間も、どの色を強調しているかが分かるようにする
-  const hueBoostSummary = useMemo(() => {
-    const boosted = HUE_BANDS.map((band, index) => ({ band, boost: adjustment.hueBoosts[index] }))
-      .filter((entry) => entry.boost > 1)
-      .map((entry) => `${entry.band.label} ${entry.boost.toFixed(1)}倍`);
+  const boostedBandLabels = useMemo(
+    () =>
+      HUE_BANDS.map((band, index) => ({ band, boost: adjustment.hueBoosts[index] }))
+        .filter((entry) => entry.boost > 1)
+        .map((entry) => `${entry.band.label} ${entry.boost.toFixed(1)}倍`),
+    [adjustment.hueBoosts]
+  );
 
-    return boosted.length > 0 ? boosted.join('・') : 'すべて既定';
-  }, [adjustment.hueBoosts]);
+  const hueBoostSummary = boostedBandLabels.length > 0 ? boostedBandLabels.join('・') : 'すべて既定';
+
+  /**
+   * 閉じているときに出す要約。開かなくても「今どの設定で保存されるか」と
+   * 「その設定で絵が拾えているか」が分かるようにする。
+   */
+  const colorSummary = useMemo(() => {
+    const preset = COLOR_ADJUSTMENT_PRESETS.find((candidate) =>
+      isSameGlobalAdjustment(adjustment, candidate.value)
+    );
+    const parts = [preset ? preset.label : 'カスタム', ...boostedBandLabels];
+    const ratio = inkRatios ? `｜残る画素 ${(inkRatios.after * 100).toFixed(1)}%` : '';
+
+    return `${parts.join('・')}${ratio}`;
+  }, [adjustment, boostedBandLabels, inkRatios]);
 
   const handleConfirm = useCallback(async () => {
     if (!croppedAreaPixels) return;
@@ -320,6 +335,23 @@ export default function ImageCropModal({
     color: '#718096',
     margin: '0.25rem 0 0',
     textAlign: 'center',
+  };
+
+  const accordionHeaderStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+    width: '100%',
+    padding: '0.625rem 0.75rem',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    background: '#f7fafc',
+    color: '#2d3748',
+    fontSize: '0.9375rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    textAlign: 'left',
   };
 
   const sliderLabelStyle: React.CSSProperties = {
@@ -463,241 +495,240 @@ export default function ImageCropModal({
             borderTop: '1px solid #e2e8f0',
           }}
         >
-          <h4 style={{ fontWeight: 'bold', color: '#2d3748', margin: '0 0 0.25rem', fontSize: '0.9375rem' }}>
-            🎨 色の調整
-          </h4>
-          <p style={{ fontSize: '0.75rem', color: '#718096', margin: '0 0 0.75rem', lineHeight: 1.6 }}>
-            薄いピンクなどの淡い色は、そのままだと白紙と区別できず花火にも印刷にも出てきません。
-            ここで濃くしてから保存します（保存する画像そのものを補正するので、花火・印刷の両方に効きます）。
-          </p>
+          {/* 設定はブラウザに保存され次の取り込みにも効くため、普段は閉じたままで使える */}
+          <button
+            type="button"
+            onClick={() => setIsColorSectionOpen((open) => !open)}
+            aria-expanded={isColorSectionOpen}
+            style={accordionHeaderStyle}
+          >
+            <span>🎨 色の調整</span>
+            <span style={{ fontWeight: 400, fontSize: '0.75rem', color: '#718096' }}>
+              {colorSummary} {isColorSectionOpen ? '▲' : '▼'}
+            </span>
+          </button>
 
-          <p style={{ ...sliderLabelStyle, marginBottom: '0.375rem' }}>
-            <span>⚡ 全体の強さ</span>
-          </p>
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            {COLOR_ADJUSTMENT_PRESETS.map((preset) => {
-              const isActive = isSameGlobalAdjustment(adjustment, preset.value);
-              return (
-                <button
-                  key={preset.key}
-                  type="button"
-                  // 色ごとの強調は取り込むペンに合わせた設定なので、プリセットでは触らない
-                  onClick={() => updateAdjustment({ ...adjustment, ...preset.value })}
-                  style={{
-                    ...secondaryButtonStyle,
-                    flex: 1,
-                    margin: 0,
-                    background: isActive
-                      ? 'linear-gradient(135deg, #38b2ac 0%, #319795 100%)'
-                      : '#edf2f7',
-                    color: isActive ? 'white' : '#4a5568',
-                    boxShadow: isActive ? secondaryButtonStyle.boxShadow : 'none',
-                  }}
-                >
-                  {preset.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div style={{ marginBottom: '0.75rem' }}>
-            <label htmlFor="adjust-saturation" style={sliderLabelStyle}>
-              <span>🌈 鮮やかさ</span>
-              <span>{adjustment.saturation.toFixed(1)}倍</span>
-            </label>
-            <input
-              id="adjust-saturation"
-              type="range"
-              min={SATURATION_RANGE.min}
-              max={SATURATION_RANGE.max}
-              step={SATURATION_RANGE.step}
-              value={adjustment.saturation}
-              onChange={(e) => updateAdjustment({ ...adjustment, saturation: Number(e.target.value) })}
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '0.75rem' }}>
-            <label htmlFor="adjust-black-level" style={sliderLabelStyle}>
-              <span>🖊️ 濃さ</span>
-              <span>{adjustment.blackLevel}</span>
-            </label>
-            <input
-              id="adjust-black-level"
-              type="range"
-              min={BLACK_LEVEL_RANGE.min}
-              max={BLACK_LEVEL_RANGE.max}
-              step={BLACK_LEVEL_RANGE.step}
-              value={adjustment.blackLevel}
-              onChange={(e) => updateAdjustment({ ...adjustment, blackLevel: Number(e.target.value) })}
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <label style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4a5568', cursor: 'pointer', marginBottom: '0.5rem' }}>
-            <input
-              type="checkbox"
-              checked={adjustment.autoWhiteBalance}
-              onChange={(e) => updateAdjustment({ ...adjustment, autoWhiteBalance: e.target.checked })}
-              style={{ marginRight: '0.5rem', accentColor: '#667eea' }}
-            />
-            紙の色かぶりを自動で補正する
-          </label>
-
-          <div style={{ marginTop: '0.75rem', marginBottom: '0.75rem' }}>
-            <button
-              type="button"
-              onClick={() => setIsHueSectionOpen((open) => !open)}
-              aria-expanded={isHueSectionOpen}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                padding: '0.5rem 0.75rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                background: '#f7fafc',
-                color: '#4a5568',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              <span>🎯 色ごとの強調</span>
-              <span style={{ fontWeight: 400, fontSize: '0.75rem', color: '#718096' }}>
-                {hueBoostSummary} {isHueSectionOpen ? '▲' : '▼'}
-              </span>
-            </button>
-
-            {isHueSectionOpen && (
-              <div style={{ padding: '0.75rem 0.25rem 0' }}>
-                <p style={{ fontSize: '0.75rem', color: '#718096', margin: '0 0 0.5rem', lineHeight: 1.6 }}>
-                  使っているペンの中で特定の色だけ拾えないときは、全体を上げずにその色だけ強くします。
-                  倍率は全体の強さに掛かります（全体を「なし」にすれば、その色だけを強調できます）。
-                  下の「補正前」プレビューで拾えていない色をクリックすると、その色の行が自動で上がります。
-                </p>
-
-                {HUE_BANDS.map((band, index) => (
-                  <div
-                    key={band.key}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      marginBottom: '0.25rem',
-                      // スポイトで拾った色がどの帯に入ったかを分かるようにする
-                      backgroundColor: band.key === pickedBandKey ? '#ebf8ff' : 'transparent',
-                      borderRadius: '6px',
-                    }}
-                  >
-                    <span
-                      aria-hidden
-                      style={{
-                        width: '0.875rem',
-                        height: '0.875rem',
-                        borderRadius: '50%',
-                        backgroundColor: band.swatch,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <label
-                      htmlFor={`adjust-hue-${band.key}`}
-                      style={{ fontSize: '0.8125rem', color: '#4a5568', width: '3.25rem', flexShrink: 0 }}
-                    >
-                      {band.label}
-                    </label>
-                    <input
-                      id={`adjust-hue-${band.key}`}
-                      type="range"
-                      min={HUE_BOOST_RANGE.min}
-                      max={HUE_BOOST_RANGE.max}
-                      step={HUE_BOOST_RANGE.step}
-                      value={adjustment.hueBoosts[index]}
-                      onChange={(e) => {
-                        const hueBoosts = [...adjustment.hueBoosts];
-                        hueBoosts[index] = Number(e.target.value);
-                        updateAdjustment({ ...adjustment, hueBoosts });
-                      }}
-                      style={{ flex: 1, minWidth: 0 }}
-                    />
-                    <span
-                      style={{
-                        fontSize: '0.75rem',
-                        color: adjustment.hueBoosts[index] > 1 ? '#2d3748' : '#a0aec0',
-                        width: '2.75rem',
-                        textAlign: 'right',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {adjustment.hueBoosts[index].toFixed(1)}倍
-                    </span>
-                  </div>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={() => updateAdjustment({ ...adjustment, hueBoosts: createNeutralHueBoosts() })}
-                  disabled={!hasHueBoost(adjustment)}
-                  style={{
-                    ...secondaryButtonStyle,
-                    width: '100%',
-                    margin: '0.5rem 0 0',
-                    background: '#edf2f7',
-                    color: '#4a5568',
-                    boxShadow: 'none',
-                    opacity: hasHueBoost(adjustment) ? 1 : 0.6,
-                    cursor: hasHueBoost(adjustment) ? 'pointer' : 'not-allowed',
-                  }}
-                >
-                  色ごとの強調をリセット
-                </button>
-              </div>
-            )}
-          </div>
-
-          <label style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4a5568', cursor: 'pointer', marginBottom: '0.75rem' }}>
-            <input
-              type="checkbox"
-              checked={showInkOnly}
-              onChange={(e) => setShowInkOnly(e.target.checked)}
-              style={{ marginRight: '0.5rem', accentColor: '#667eea' }}
-            />
-            補正後を「花火・印刷に残る部分だけ」で表示する
-          </label>
-
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <canvas
-                ref={beforeCanvasRef}
-                onClick={handlePickColor}
-                aria-label="補正前のプレビュー。クリックした場所の色を強調します"
-                title="拾えていない色をクリックすると、その色を強調します"
-                style={{ ...previewCanvasStyle, cursor: pickSource ? 'crosshair' : 'default' }}
-              />
-              <p style={previewCaptionStyle}>
-                💧 補正前（クリックで色を拾う）
-                {inkRatios ? `｜残る画素 ${(inkRatios.before * 100).toFixed(1)}%` : ''}
-              </p>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <canvas ref={afterCanvasRef} style={previewCanvasStyle} />
-              <p style={previewCaptionStyle}>
-                補正後{inkRatios ? `｜残る画素 ${(inkRatios.after * 100).toFixed(1)}%` : ''}
-              </p>
-            </div>
-          </div>
-
-          {pickMessage && (
-            <p style={{ fontSize: '0.75rem', color: '#2d3748', margin: '0.5rem 0 0', lineHeight: 1.6 }}>
-              {pickMessage}
+          {!isColorSectionOpen && (
+            <p style={{ fontSize: '0.75rem', color: '#718096', margin: '0.5rem 0 0', lineHeight: 1.6 }}>
+              前回の設定をそのまま使います。淡い色が拾えていないときだけ開いてください。
             </p>
           )}
 
-          <p style={{ fontSize: '0.75rem', color: '#718096', margin: '0.5rem 0 0', lineHeight: 1.6 }}>
-            プレビューは切り取り前の画像全体です。上げすぎると紙のざらつきや影まで拾って花火に
-            余計な粒が出るため、「残る画素」が急に増えたら下げてください。
-          </p>
+          {isColorSectionOpen && (
+            <div style={{ paddingTop: '0.75rem' }}>
+              <p style={{ fontSize: '0.75rem', color: '#718096', margin: '0 0 0.75rem', lineHeight: 1.6 }}>
+                薄いピンクなどの淡い色は、そのままだと白紙と区別できず花火にも印刷にも出てきません。
+                ここで濃くしてから保存します（保存する画像そのものを補正するので、花火・印刷の両方に効きます）。
+                設定はブラウザに保存され、次の取り込みにも使われます。
+              </p>
+
+              <p style={{ ...sliderLabelStyle, marginBottom: '0.375rem' }}>
+                <span>⚡ 全体の強さ</span>
+              </p>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                {COLOR_ADJUSTMENT_PRESETS.map((preset) => {
+                  const isActive = isSameGlobalAdjustment(adjustment, preset.value);
+                  return (
+                    <button
+                      key={preset.key}
+                      type="button"
+                      // 色ごとの強調は取り込むペンに合わせた設定なので、プリセットでは触らない
+                      onClick={() => updateAdjustment({ ...adjustment, ...preset.value })}
+                      style={{
+                        ...secondaryButtonStyle,
+                        flex: 1,
+                        margin: 0,
+                        background: isActive
+                          ? 'linear-gradient(135deg, #38b2ac 0%, #319795 100%)'
+                          : '#edf2f7',
+                        color: isActive ? 'white' : '#4a5568',
+                        boxShadow: isActive ? secondaryButtonStyle.boxShadow : 'none',
+                      }}
+                    >
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div style={{ marginBottom: '0.75rem' }}>
+                <label htmlFor="adjust-saturation" style={sliderLabelStyle}>
+                  <span>🌈 鮮やかさ</span>
+                  <span>{adjustment.saturation.toFixed(1)}倍</span>
+                </label>
+                <input
+                  id="adjust-saturation"
+                  type="range"
+                  min={SATURATION_RANGE.min}
+                  max={SATURATION_RANGE.max}
+                  step={SATURATION_RANGE.step}
+                  value={adjustment.saturation}
+                  onChange={(e) => updateAdjustment({ ...adjustment, saturation: Number(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '0.75rem' }}>
+                <label htmlFor="adjust-black-level" style={sliderLabelStyle}>
+                  <span>🖊️ 濃さ</span>
+                  <span>{adjustment.blackLevel}</span>
+                </label>
+                <input
+                  id="adjust-black-level"
+                  type="range"
+                  min={BLACK_LEVEL_RANGE.min}
+                  max={BLACK_LEVEL_RANGE.max}
+                  step={BLACK_LEVEL_RANGE.step}
+                  value={adjustment.blackLevel}
+                  onChange={(e) => updateAdjustment({ ...adjustment, blackLevel: Number(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4a5568', cursor: 'pointer', marginBottom: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={adjustment.autoWhiteBalance}
+                  onChange={(e) => updateAdjustment({ ...adjustment, autoWhiteBalance: e.target.checked })}
+                  style={{ marginRight: '0.5rem', accentColor: '#667eea' }}
+                />
+                紙の色かぶりを自動で補正する
+              </label>
+
+              <div style={{ marginTop: '0.75rem', marginBottom: '0.75rem' }}>
+                <p style={{ ...sliderLabelStyle, marginBottom: '0.375rem' }}>
+                  <span>🎯 色ごとの強調</span>
+                  <span style={{ fontWeight: 400, fontSize: '0.75rem', color: '#718096' }}>{hueBoostSummary}</span>
+                </p>
+
+                  <div>
+                    <p style={{ fontSize: '0.75rem', color: '#718096', margin: '0 0 0.5rem', lineHeight: 1.6 }}>
+                      使っているペンの中で特定の色だけ拾えないときは、全体を上げずにその色だけ強くします。
+                      倍率は全体の強さに掛かります（全体を「なし」にすれば、その色だけを強調できます）。
+                      下の「補正前」プレビューで拾えていない色をクリックすると、その色の行が自動で上がります。
+                    </p>
+
+                    {HUE_BANDS.map((band, index) => (
+                      <div
+                        key={band.key}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          marginBottom: '0.25rem',
+                          // スポイトで拾った色がどの帯に入ったかを分かるようにする
+                          backgroundColor: band.key === pickedBandKey ? '#ebf8ff' : 'transparent',
+                          borderRadius: '6px',
+                        }}
+                      >
+                        <span
+                          aria-hidden
+                          style={{
+                            width: '0.875rem',
+                            height: '0.875rem',
+                            borderRadius: '50%',
+                            backgroundColor: band.swatch,
+                            flexShrink: 0,
+                          }}
+                        />
+                        <label
+                          htmlFor={`adjust-hue-${band.key}`}
+                          style={{ fontSize: '0.8125rem', color: '#4a5568', width: '3.25rem', flexShrink: 0 }}
+                        >
+                          {band.label}
+                        </label>
+                        <input
+                          id={`adjust-hue-${band.key}`}
+                          type="range"
+                          min={HUE_BOOST_RANGE.min}
+                          max={HUE_BOOST_RANGE.max}
+                          step={HUE_BOOST_RANGE.step}
+                          value={adjustment.hueBoosts[index]}
+                          onChange={(e) => {
+                            const hueBoosts = [...adjustment.hueBoosts];
+                            hueBoosts[index] = Number(e.target.value);
+                            updateAdjustment({ ...adjustment, hueBoosts });
+                          }}
+                          style={{ flex: 1, minWidth: 0 }}
+                        />
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            color: adjustment.hueBoosts[index] > 1 ? '#2d3748' : '#a0aec0',
+                            width: '2.75rem',
+                            textAlign: 'right',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {adjustment.hueBoosts[index].toFixed(1)}倍
+                        </span>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={() => updateAdjustment({ ...adjustment, hueBoosts: createNeutralHueBoosts() })}
+                      disabled={!hasHueBoost(adjustment)}
+                      style={{
+                        ...secondaryButtonStyle,
+                        width: '100%',
+                        margin: '0.5rem 0 0',
+                        background: '#edf2f7',
+                        color: '#4a5568',
+                        boxShadow: 'none',
+                        opacity: hasHueBoost(adjustment) ? 1 : 0.6,
+                        cursor: hasHueBoost(adjustment) ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      色ごとの強調をリセット
+                    </button>
+                  </div>
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#4a5568', cursor: 'pointer', marginBottom: '0.75rem' }}>
+                <input
+                  type="checkbox"
+                  checked={showInkOnly}
+                  onChange={(e) => setShowInkOnly(e.target.checked)}
+                  style={{ marginRight: '0.5rem', accentColor: '#667eea' }}
+                />
+                補正後を「花火・印刷に残る部分だけ」で表示する
+              </label>
+
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <canvas
+                    ref={beforeCanvasRef}
+                    onClick={handlePickColor}
+                    aria-label="補正前のプレビュー。クリックした場所の色を強調します"
+                    title="拾えていない色をクリックすると、その色を強調します"
+                    style={{ ...previewCanvasStyle, cursor: pickSource ? 'crosshair' : 'default' }}
+                  />
+                  <p style={previewCaptionStyle}>
+                    💧 補正前（クリックで色を拾う）
+                    {inkRatios ? `｜残る画素 ${(inkRatios.before * 100).toFixed(1)}%` : ''}
+                  </p>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <canvas ref={afterCanvasRef} style={previewCanvasStyle} />
+                  <p style={previewCaptionStyle}>
+                    補正後{inkRatios ? `｜残る画素 ${(inkRatios.after * 100).toFixed(1)}%` : ''}
+                  </p>
+                </div>
+              </div>
+
+              {pickMessage && (
+                <p style={{ fontSize: '0.75rem', color: '#2d3748', margin: '0.5rem 0 0', lineHeight: 1.6 }}>
+                  {pickMessage}
+                </p>
+              )}
+
+              <p style={{ fontSize: '0.75rem', color: '#718096', margin: '0.5rem 0 0', lineHeight: 1.6 }}>
+                プレビューは切り取り前の画像全体です。上げすぎると紙のざらつきや影まで拾って花火に
+                余計な粒が出るため、「残る画素」が急に増えたら下げてください。
+              </p>
+            </div>
+          )}
         </div>
 
         {errorMessage && (
