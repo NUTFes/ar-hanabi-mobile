@@ -106,7 +106,7 @@ export default function ImageCropModal({
             rotation={rotation}
             aspect={1}
             minZoom={0.1}
-            maxZoom={3}
+            maxZoom={10}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onRotationChange={setRotation}
@@ -122,7 +122,7 @@ export default function ImageCropModal({
             id="crop-zoom"
             type="range"
             min={0.1}
-            max={3}
+            max={10}
             step={0.01}
             value={zoom}
             onChange={(e) => setZoom(Number(e.target.value))}
