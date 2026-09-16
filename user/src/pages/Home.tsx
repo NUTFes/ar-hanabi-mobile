@@ -412,7 +412,11 @@ export default function Home() {
                 <div style={bottomRowSideStyle('start')}>
                   <button
                       onClick={() => setIsFramePickerOpen((prev) => !prev)}
-                      style={frameButtonStyle(isFramePickerOpen || photoFrame !== 'none')}
+                      // 強調は「フレームが適用されているか」だけを表す。
+                      // 選択パネルの開閉も兼ねさせると、フレームが「なし」でも
+                      // 開いた瞬間に選択中の見た目になってしまう（開いていることは
+                      // パネルが出ていること自体で分かる）
+                      style={frameButtonStyle(photoFrame !== 'none')}
                       className="hb-pressable"
                       aria-label="フォトフレームを選ぶ"
                       aria-expanded={isFramePickerOpen}

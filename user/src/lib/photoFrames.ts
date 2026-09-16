@@ -4,11 +4,16 @@
 // 合成（mediaCapture.ts）の両方がこの同じ関数を呼ぶため、
 // 「プレビューと保存結果がズレる」ことが原理的に起きない。
 
-export type PhotoFrameId = 'none' | 'gold' | 'hanabi' | 'film';
+/** 45th NUTFES のロゴに合わせた基調色（ロゴの紺を実測した値）と、その明るめ/暗め */
+const BRAND_NAVY = '#293895';
+const BRAND_NAVY_LIGHT = '#4356c4';
+const BRAND_NAVY_DARK = '#1b2565';
+
+export type PhotoFrameId = 'none' | 'blue' | 'hanabi' | 'film';
 
 export const PHOTO_FRAMES: { id: PhotoFrameId; label: string }[] = [
   { id: 'none', label: 'なし' },
-  { id: 'gold', label: 'ゴールド' },
+  { id: 'blue', label: 'ブルー' },
   { id: 'hanabi', label: '花火' },
   { id: 'film', label: 'シネマ' },
 ];
@@ -83,37 +88,38 @@ export function drawPhotoFrame(
   // フレームは常に不透明な上乗せ描画（下のカメラ映像の合成モードを引きずらない）
   ctx.globalCompositeOperation = 'source-over';
 
-  if (frameId === 'gold') drawGoldFrame(ctx, width, height, u);
+  if (frameId === 'blue') drawBlueFrame(ctx, width, height, u);
   else if (frameId === 'hanabi') drawHanabiFrame(ctx, width, height, u, date);
   else if (frameId === 'film') drawFilmFrame(ctx, width, height, u, date);
 
   ctx.restore();
 }
 
-/** ゴールド：金の二重枠＋四隅の飾り。花火の写真を額縁に入れたような見た目 */
-function drawGoldFrame(ctx: CanvasRenderingContext2D, w: number, h: number, u: number): void {
+/** ブルー：45thロゴの紺の二重枠＋四隅の飾り。花火の写真を額縁に入れたような見た目。
+ *  ロゴが「紺地に白抜き」なので、枠も紺を地にして飾りを白で抜く */
+function drawBlueFrame(ctx: CanvasRenderingContext2D, w: number, h: number, u: number): void {
   const margin = u * 3;
   const gradient = ctx.createLinearGradient(0, 0, w, h);
-  gradient.addColorStop(0, '#ffd607');
-  gradient.addColorStop(0.5, '#f0b810');
-  gradient.addColorStop(1, '#d99a00');
+  gradient.addColorStop(0, BRAND_NAVY_LIGHT);
+  gradient.addColorStop(0.5, BRAND_NAVY);
+  gradient.addColorStop(1, BRAND_NAVY_DARK);
 
   ctx.strokeStyle = gradient;
   ctx.lineWidth = u * 1.1;
   roundedRectPath(ctx, margin, margin, w - margin * 2, h - margin * 2, u * 4);
   ctx.stroke();
 
-  // 内側の細い白線。金枠との間に隙間を作って奥行きを出す
+  // 内側の細い白線。紺枠との間に隙間を作って奥行きを出す
   const inner = margin + u * 1.8;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
   ctx.lineWidth = u * 0.22;
   roundedRectPath(ctx, inner, inner, w - inner * 2, h - inner * 2, u * 3);
   ctx.stroke();
 
-  // 四隅の飾り（L字の短い線）
+  // 四隅の飾り（L字の短い線）。暗い写真の上でも見えるよう白で描く
   const cLen = u * 6;
   const cOff = margin + u * 4.2;
-  ctx.strokeStyle = gradient;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
   ctx.lineWidth = u * 0.5;
   ctx.lineCap = 'round';
   const corners: [number, number, number, number][] = [
@@ -142,15 +148,16 @@ function drawHanabiFrame(
   const bandH = u * 15;
   const bandY = h - bandH;
 
+  // 帯はロゴと同じ紺。ロゴが紺地に白抜きなので、帯を紺にするとロゴと地続きに見える
   const grad = ctx.createLinearGradient(0, bandY, 0, h);
-  grad.addColorStop(0, 'rgba(8, 8, 12, 0)');
-  grad.addColorStop(0.35, 'rgba(8, 8, 12, 0.55)');
-  grad.addColorStop(1, 'rgba(8, 8, 12, 0.82)');
+  grad.addColorStop(0, 'rgba(41, 56, 149, 0)');
+  grad.addColorStop(0.35, 'rgba(41, 56, 149, 0.62)');
+  grad.addColorStop(1, 'rgba(27, 37, 101, 0.9)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, bandY, w, bandH);
 
-  // 帯の上端を金の細線で締める
-  ctx.strokeStyle = 'rgba(240, 184, 16, 0.75)';
+  // 帯の上端を白い細線で締める（紺の帯の上では白の方が締まる）
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
   ctx.lineWidth = u * 0.22;
   ctx.beginPath();
   ctx.moveTo(u * 6, bandY + u * 3.5);
@@ -168,7 +175,8 @@ function drawHanabiFrame(
   }
 
   ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = '#ffd607';
+  // 紺の帯の上なので、ロゴの白抜きに合わせて文字も白で置く
+  ctx.fillStyle = '#fff';
   ctx.font = `700 ${u * 4.4}px -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif`;
   ctx.fillText('AR花火', textLeft, baseline - u * 2.2);
 
