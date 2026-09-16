@@ -74,8 +74,38 @@ button {
   .hb-pressable,
   .hb-chevron,
   .hb-reveal,
-  .hb-spin {
+  .hb-spin,
+  .hb-flash,
+  .hb-blink {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* シャッターを切った瞬間の白いフラッシュ。撮れたことを一目で分かるようにする */
+.hb-flash {
+  animation: hb-flash 0.4s ease-out forwards;
+}
+
+/* 録画中インジケータの点滅 */
+.hb-blink {
+  animation: hb-blink 1s steps(1, end) infinite;
+}
+
+@keyframes hb-flash {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes hb-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  50.01%, 100% {
+    opacity: 0.25;
   }
 }
