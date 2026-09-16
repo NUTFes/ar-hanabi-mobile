@@ -55,6 +55,7 @@ export default defineConfig({
       'localhost',
       '.ngrok-free.app', // スマホ実機検証用（ngrok無料枠のランダムサブドメインを許可）
       '.ngrok-free.dev', // スマホ実機検証用（ngrok無料枠の新ドメインサフィックス）
+      '.trycloudflare.com', // スマホ実機検証用（cloudflared のクイックトンネル）
       'hanabi.nutfes.net',
       'hanabi-stg.nutfes.net',
     ],

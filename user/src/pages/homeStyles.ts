@@ -40,6 +40,9 @@ export const FONT_DISPLAY = '"Zen Maru Gothic", -apple-system, "Hiragino Sans", 
  *  iPhoneのホームインジケータ等と重ならないようセーフエリア分を加算する */
 export const overlayContainerStyle: CSSProperties = {
   position: 'absolute',
+  // 写真撮影モードのタップ層・フォトフレーム（z-index 1〜2）より前に出し、
+  // ボタンの上をタップしたときに花火が上がらないようにする
+  zIndex: 10,
   bottom: 'calc(24px + env(safe-area-inset-bottom))',
   left: '50%',
   transform: 'translateX(-50%)',
@@ -48,6 +51,13 @@ export const overlayContainerStyle: CSSProperties = {
   alignItems: 'center',
   gap: '10px',
   width: 'min(340px, 92vw)',
+};
+
+/** Home のオーバーレイ。打ち上げボタンの右に設定ボタンが並ぶぶん、少しだけ広く取る。
+ *  Demo画面は上部の誘導テキスト（340px）と幅を揃えたいので、こちらは使わない */
+export const homeOverlayContainerStyle: CSSProperties = {
+  ...overlayContainerStyle,
+  width: 'min(400px, 94vw)',
 };
 
 /** 詳細設定（画質・カメラのリセット）を収めるガラスカード */
@@ -263,3 +273,55 @@ export function segmentedButtonStyle(isActive: boolean): CSSProperties {
     transition: 'color 0.2s ease',
   };
 }
+
+/** 打ち上げモードのアクション行。打ち上げボタンが幅いっぱいに伸び、右端に設定ボタンが並ぶ */
+export const launchRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  width: '100%',
+};
+
+/** 写真撮影モードのアクション行。
+ *  「フレーム選択・シャッター・設定ボタン」を並べる。左右を 1fr で釣り合わせることで、
+ *  両脇のボタンの大きさが違ってもシャッターが画面中央に来る */
+export const photoRowStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr auto 1fr',
+  // シャッターの上には操作の説明が乗るため、下端で揃える
+  alignItems: 'end',
+  gap: '10px',
+  width: '100%',
+};
+
+/** 写真撮影モードのアクション行の左右のセル。中身を外側（左端・右端）へ寄せる。
+ *  行は下端揃えなので、52pxのボタンが74pxのシャッターの中心に来るよう下に余白を入れる */
+export function bottomRowSideStyle(align: 'start' | 'end'): CSSProperties {
+  return {
+    display: 'flex',
+    justifyContent: align === 'start' ? 'flex-start' : 'flex-end',
+    alignItems: 'center',
+    minWidth: '52px',
+    paddingBottom: '11px',
+  };
+}
+
+/** アクション行の両端に置く丸ボタンの共通の見た目。
+ *  右端の設定ボタン（設定を閉じているときだけ出す）と、左端のモード切替ボタンが使う。
+ *  写真撮影モードのフレームボタン（photoStyles.ts）とも寸法を揃えてある */
+export const circleFabStyle: CSSProperties = {
+  width: '52px',
+  height: '52px',
+  flexShrink: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: RADIUS.pill,
+  border: `1px solid ${COLORS.borderStrong}`,
+  backgroundColor: COLORS.surface,
+  backdropFilter: 'blur(12px) saturate(140%)',
+  color: COLORS.text,
+  fontSize: '22px',
+  cursor: 'pointer',
+  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+};
