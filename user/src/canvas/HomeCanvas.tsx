@@ -26,9 +26,13 @@ interface HomeCanvasProps {
 
 export type HomeCanvasHandle = {
   handleLaunch: () => void;
+  /** 画面をタップした位置（NDC: 左下 -1,-1 〜 右上 1,1）で花火を打ち上げる */
+  launchAtNdc: (ndcX: number, ndcY: number) => void;
   resetCameraRotation: () => void;
   setCurrentAsInitial: () => void;
   setCameraRotation: (euler: THREE.Euler) => void;
+  /** 写真・動画の合成に使う、ARカメラ映像のvideo要素と花火のWebGL canvas */
+  getCaptureSources: () => { video: HTMLVideoElement | null; gl: HTMLCanvasElement | null };
 }
 
 const HomeCanvas = forwardRef<HomeCanvasHandle, HomeCanvasProps>((props, ref) => {
@@ -38,14 +42,26 @@ const HomeCanvas = forwardRef<HomeCanvasHandle, HomeCanvasProps>((props, ref) =>
 
   useImperativeHandle(ref, () => ({
     handleLaunch,
+    launchAtNdc,
     resetCameraRotation,
     setCurrentAsInitial,
     setCameraRotation,
+    getCaptureSources,
   }));
 
   const handleLaunch = () => {
     homeSceneRef.current?.handleLaunch();
   };
+
+  const launchAtNdc = (ndcX: number, ndcY: number) => {
+    homeSceneRef.current?.launchAtNdc(ndcX, ndcY);
+  };
+
+  // 撮影時に合成する2枚（カメラ映像と花火）。どちらもAR初期化後に揃うため、都度取り直す
+  const getCaptureSources = () => ({
+    video: canvasSetupRef.current?.getVideoElement() ?? null,
+    gl: canvasSetupRef.current?.getGLCanvas() ?? null,
+  });
 
   const resetCameraRotation = () => {
     canvasSetupRef.current?.resetCameraRotation();
@@ -62,7 +78,9 @@ const HomeCanvas = forwardRef<HomeCanvasHandle, HomeCanvasProps>((props, ref) =>
   return (
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
         <Canvas
-            gl={{ alpha: true }}
+            // preserveDrawingBuffer: 写真撮影モードで canvas を drawImage するとき、
+            // 描画バッファが毎フレーム破棄されると花火が写らず透明になってしまうため保持する
+            gl={{ alpha: true, preserveDrawingBuffer: true }}
             style={{ background: 'transparent' }}
         >
           <Suspense fallback={null}>
@@ -87,6 +105,8 @@ export type CanvasSetupHandle = {
   resetCameraRotation: () => void;
   setCurrentAsInitial: () => void;
   setCameraRotation: (euler: THREE.Euler) => void;
+  getVideoElement: () => HTMLVideoElement | null;
+  getGLCanvas: () => HTMLCanvasElement | null;
 }
 
 const CanvasSetup = forwardRef<CanvasSetupHandle>((_,  ref) => {
@@ -95,7 +115,7 @@ const CanvasSetup = forwardRef<CanvasSetupHandle>((_,  ref) => {
   const arData = useMemo(() => {
     return initializeAR(scene, camera, gl);
   }, [scene, camera, gl]);
-  const { arToolkitSource } = arData;
+  const { arToolkitSource, videoElement } = arData;
 
   console.log('ARToolkitSource:', arToolkitSource);
 
@@ -129,6 +149,8 @@ const CanvasSetup = forwardRef<CanvasSetupHandle>((_,  ref) => {
     resetCameraRotation,
     setCurrentAsInitial,
     setCameraRotation,
+    getVideoElement: () => videoElement ?? null,
+    getGLCanvas: () => gl.domElement,
   }));
 
   useEffect(() => {

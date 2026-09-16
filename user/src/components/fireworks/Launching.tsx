@@ -117,8 +117,14 @@ const Launching = memo(function Launching({
   })
 
 
+  // frustumCulled={false} の理由:
+  // ジオメトリは50点すべてを打ち上げ開始位置に置いて作られ、three.jsはそのときの
+  // バウンディングスフィアをキャッシュする。座標は毎フレーム更新するがスフィアは
+  // 再計算されないため、開始位置が画面の外（画面下端より下）だと、そのあと画面内まで
+  // 上がってきてもオブジェクトごとカリングされ続け、尾が一切描画されない。
+  // 画面の下寄りをタップしたときに尾が突然出なくなるのはこれが原因。
   return (
-    <points ref={pointsRef}>
+    <points ref={pointsRef} frustumCulled={false}>
       <bufferGeometry />
       <pointsMaterial
         // attach="material"
