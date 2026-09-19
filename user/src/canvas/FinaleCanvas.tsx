@@ -94,7 +94,13 @@ const CanvasSetup = () => {
       });
     }
   }, [arData]);
-  
+
+  // AR.js側で登録したwindowのresizeリスナー等を、アンマウント時に解除する
+  useEffect(() => {
+    return () => arData?.dispose();
+  }, [arData]);
+
+
   // カメラの位置を設定
   useEffect(() => {
     camera.position.set(0, 0, 100);
@@ -141,9 +147,9 @@ const CanvasSetup = () => {
           luminanceThreshold={0.1}    // より低い閾値で多くの花火が光る
           luminanceSmoothing={0.3}    // 滑らかなブルーム
           intensity={1.0}             // フィナーレ用に強めのブルーム
-          width={window.innerWidth}   // ブルームの幅
-          height={window.innerHeight} // ブルームの高さ
           mipmapBlur={true}           // ミップマップを使用
+          // width/height を指定するとresolutionScaleが無視されるため指定しない
+          // （Resolution.updateEffectiveSize()がpreferredWidth/Heightを優先する仕様）
           resolutionScale={1.5}       // 高解像度でより美しく
         />
       </EffectComposer>

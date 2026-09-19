@@ -19,6 +19,15 @@ button {
   user-select: none;
 }
 
+/* Android Chrome 等の 100vh は large viewport 基準になり、URLバー分だけ実際に
+ * 見えているビューポートより長くなる。dvh（dynamic viewport height）に対応した
+ * ブラウザではそちらを優先させ、非対応環境向けに 100vh をフォールバックとして残す
+ * （CSSは未対応の値を無視するだけなので、後勝ちで dvh 対応環境だけ上書きされる）。 */
+.hb-viewport-fill {
+  height: 100vh;
+  height: 100dvh;
+}
+
 /* ===== オーバーレイUI用の最小限のアニメーション・ユーティリティ =====
  * インラインstyle（CSSProperties）では :active や @keyframes が書けないため、
  * これらだけをクラスとして切り出し、色・寸法は引き続き homeStyles.ts 側で持つ */

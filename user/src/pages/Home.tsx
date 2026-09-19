@@ -278,7 +278,7 @@ export default function Home() {
   );
 
   return (
-      <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+      <div className="hb-viewport-fill" style={{ width: '100vw', overflow: 'hidden' }}>
         <HomeCanvas
             illustrationFireworks={illustrationFireworks}
             particleData={particleData}

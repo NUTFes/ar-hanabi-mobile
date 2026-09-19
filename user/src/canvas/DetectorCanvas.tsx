@@ -79,9 +79,14 @@ const CanvasSetup = ({ onDetectJump }: CanvasSetupProps) => {
     return initializeAR(scene, camera, gl);
   }, [scene, camera, gl]);
   const { arToolkitSource, arToolkitContext, markerRoot, videoElement, videoTexture } = arData;
-  
+
   console.log('ARToolkitSource:', arToolkitSource);
-  
+
+  // AR.js側で登録したwindowのresizeリスナー等を、アンマウント時に解除する
+  useEffect(() => {
+    return () => arData.dispose();
+  }, [arData]);
+
   // カメラの位置を設定
   useEffect(() => {
     camera.position.set(0, 0, 30);

@@ -76,7 +76,7 @@ export default function Demo() {
   const showLaunchButton = isConverting || isReady;
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div className="hb-viewport-fill" style={{ width: '100vw', overflow: 'hidden' }}>
       <HomeCanvas
         illustrationFireworks={null}
         particleData={particleData}
